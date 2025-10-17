@@ -1,21 +1,28 @@
-from src.argparser import ArgParser
+from os import system as sys, getcwd
+from pathlib import Path
+
+from src.commands.ls import Ls
+from src.commands.cd import Cd
+from src.logger import logger
 from src.colortext import colorize
-from src.constants import LS_COMMAND_FILE_SIZE_COLUMN_WIDTH
-
-from os import system as sys
-from os import listdir
-from os.path import getsize
 
 
-class SuperTerminal3000:
+class Terminal3000:
 
-    def __init__(self, debug: bool = False) -> None:
-        self.parser = ArgParser()
+    def __init__(self) -> None:
+        self.cwd = getcwd()
+        self.commands: dict[str, Ls | Cd] = {
+            "ls": Ls(),
+            "cd": Cd(),
+        }
+
         self.help_message = f"""
-This is SuperTerminal3000 - very powerful tool for you
+This is Terminal3000 - very powerful tool for you
 Available commands:
-    ls - {self.parser.lsParser.description}
-    cd - {self.parser.cdParser.description}
+    ls - {self.commands['ls'].parser.description}
+    cd - {self.commands['cd'].parser.description}
+    help - Show this help message
+    quit - Quit Terminal3000
 """
 
     def start(self) -> None:
@@ -23,9 +30,10 @@ Available commands:
         self.await_command()
 
     def await_command(self) -> None:
-        msg1 = colorize(text="[super-terminal-3000]", color="green", bold=True)
-        msg2 = colorize(text="#", color="green")
+        msg1 = colorize(text="[T3000]", color="green", bold=True)
+        msg2 = colorize(text=f"{Path(self.cwd)} #", color="green")
         command = input(f"{msg1} {msg2} \033[0;30m")
+        logger.info("Received: %s", command)
 
         print("\033[0m", end="")
         self.process_command(command=command)
@@ -35,13 +43,17 @@ Available commands:
 
         match cmd[0]:
             case "ls":
-                args = self.parser.parse(cmd="ls", args=cmd[1:])
-                self.ls(args.path, args.list)
+                self.commands["ls"].execute(cwd=self.cwd, _args=cmd[1:])
             case "cd":
-                pass
+                self.cwd = self.commands["cd"].execute(cwd=self.cwd, _args=cmd[1:]) # type: ignore
             case "help":
                 print(self.help_message)
+            case "quit":
+                return
             case _:
+                logger.error(
+                    'The term "%s" is not recognised as the name of a command', cmd[0]
+                )
                 msg1 = colorize(text=cmd[0], color="red", bold=True)
                 msg2 = colorize(
                     text="is not recognised as the name of a command", color="red"
@@ -50,26 +62,9 @@ Available commands:
 
         self.await_command()
 
-    def ls(self, path: str, list: str | None):
-        if list:
-            max_len_elem = max(max(len(x) for x in listdir(path=path)), 9)
-            head = colorize(
-                text=f"{'File name': ^{max_len_elem}}  {'File size': ^{LS_COMMAND_FILE_SIZE_COLUMN_WIDTH}}",
-                color="white",
-                bold=True,
-            )
-            print(head)
-
-            for elem in listdir(path=path):
-                print(
-                    f"{elem: <{max_len_elem}}  {getsize(f'{path}/{elem}'): <{LS_COMMAND_FILE_SIZE_COLUMN_WIDTH}}"
-                )
-        else:
-            [print(elem) for elem in listdir(path=path)]
-
 
 def main() -> None:
-    terminal = SuperTerminal3000(debug=True)
+    terminal = Terminal3000()
     terminal.start()
 
 
