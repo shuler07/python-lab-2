@@ -20,6 +20,9 @@ class Cd:
         if len(unknown_args) > 0:
             logger.warning("Invalid args: %s", ", ".join(unknown_args))
 
+        if args.path == "~":
+            return str(Path().home().resolve())
+
         path = f"{cwd}\{args.path}"
         if not access(path=path, mode=F_OK):
             logger.warning("Path %s doesn't exist", path)
