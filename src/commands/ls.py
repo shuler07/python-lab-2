@@ -1,4 +1,4 @@
-from os import listdir
+from os import listdir, access, R_OK, W_OK
 from os.path import getsize, getctime, getmtime
 from datetime import datetime as dt
 import argparse
@@ -9,6 +9,7 @@ from src.constants import (
     LS_FILE_SIZE_COLUMN_WIDTH,
     LS_DATETIME_COLUMN_WIDTH,
     LS_DATETIME_FORMAT,
+    LS_PERMS_COLUMN_WIDTH,
 )
 
 
@@ -20,7 +21,7 @@ class Ls:
             description="Show files and folders in current or specified folder",
             exit_on_error=False,
         )
-        parser.add_argument("path", help="Set path", nargs='?')
+        parser.add_argument("path", help="Set path", nargs="?")
         parser.add_argument(
             "-l",
             "--list",
@@ -39,7 +40,7 @@ class Ls:
             max_len_elem = max(max(len(x) for x in listdir(path=path)), 9)
 
             head = colorize(
-                text=f"{'File name': ^{max_len_elem}}  {'File size': ^{LS_FILE_SIZE_COLUMN_WIDTH}}  {'File created': ^{LS_DATETIME_COLUMN_WIDTH}}  {'File modified': ^{LS_DATETIME_COLUMN_WIDTH}}",
+                text=f"{'File name': ^{max_len_elem}}  {'File size': ^{LS_FILE_SIZE_COLUMN_WIDTH}}  {'File created': ^{LS_DATETIME_COLUMN_WIDTH}}  {'File modified': ^{LS_DATETIME_COLUMN_WIDTH}}  {'Permissions': ^{LS_PERMS_COLUMN_WIDTH}}",
                 color="white",
                 bold=True,
             )
@@ -57,9 +58,17 @@ class Ls:
             def el_modified(x: str) -> str:
                 return f"{str(dt.fromtimestamp(getmtime(f'{path}/{x}')).strftime(LS_DATETIME_FORMAT)): <{LS_DATETIME_COLUMN_WIDTH}}"
 
+            def el_access(x: str) -> str:
+                perms = []
+                if access(f"{path}/{x}", R_OK):
+                    perms.append("Read")
+                if access(f"{path}/{x}", W_OK):
+                    perms.append("Write")
+                return f"{', '.join(perms): <{LS_PERMS_COLUMN_WIDTH}}"
+
             for el in listdir(path=path):
                 print(
-                    f"{el_name(el)}  {el_size(el)}  {el_created(el)}  {el_modified(el)}"
+                    f"{el_name(el)}  {el_size(el)}  {el_created(el)}  {el_modified(el)}  {el_access(el)}"
                 )
         else:
             [print(elem) for elem in listdir(path=path)]
