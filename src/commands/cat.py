@@ -7,6 +7,7 @@ from src.errors import (
     unknown_arguments_message,
     missing_required_arguments_message,
     path_leads_to_dir_instead_of_file_message,
+    permission_denied_message,
 )
 
 
@@ -39,5 +40,8 @@ class Cat:
             path_leads_to_dir_instead_of_file_message(path=path)
             return
 
-        for line in open(path):
-            print(line.rstrip("\n"))
+        try:
+            for line in open(path):
+                print(line.rstrip("\n"))
+        except PermissionError:
+            permission_denied_message(path=path)

@@ -8,6 +8,7 @@ from src.errors import (
     unknown_arguments_message,
     missing_required_arguments_message,
     path_leads_to_file_instead_of_dir_message,
+    permission_denied_message,
 )
 
 
@@ -49,6 +50,13 @@ class Cp:
                 path_leads_to_file_instead_of_dir_message(path=srcpath)
                 return
 
-            copytree(src=srcpath, dst=dstpath, dirs_exist_ok=True)
+            try:
+                copytree(src=srcpath, dst=dstpath, dirs_exist_ok=True)
+            except PermissionError:
+                permission_denied_message(path=srcpath)
+
         else:
-            copy(src=srcpath, dst=dstpath)
+            try:
+                copy(src=srcpath, dst=dstpath)
+            except PermissionError:
+                permission_denied_message(path=srcpath)

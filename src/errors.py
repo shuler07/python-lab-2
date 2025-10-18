@@ -59,3 +59,13 @@ def path_leads_to_file_instead_of_dir_message(path: str) -> None:
     msg1 = colorize(text="File path received instead of directory path:", color="red")
     msg2 = colorize(text=path, color="red", bold=True)
     print(msg1, msg2, sep=" ")
+
+
+def permission_denied_message(path: str) -> None:
+    path = clear_path(path=path)
+
+    logger.error("Permission denied: %s", path)
+
+    msg1 = colorize(text="Permission denied:", color="red")
+    msg2 = colorize(text=path, color="red", bold=True)
+    print(msg1, msg2, sep=" ")
