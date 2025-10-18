@@ -12,7 +12,11 @@ class Terminal3000:
 
     def __init__(self) -> None:
         self.cwd = getcwd()
-        self.commands: dict[str, Ls | Cd | Cat] = {"ls": Ls(), "cd": Cd(), "cat": Cat()}
+        self.commands: dict[str, Ls | Cd | Cat] = {
+            "ls": Ls(),
+            "cd": Cd(),
+            "cat": Cat(),
+        }
 
         self.help_message = f"""
 This is Terminal3000 - very powerful tool for you

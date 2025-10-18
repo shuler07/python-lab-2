@@ -1,9 +1,14 @@
+from os import access, F_OK
+from os.path import isfile, isabs
 from pathlib import Path
 from argparse import ArgumentParser, ArgumentError
-from os import access, F_OK
 
-from src.logger import logger
-from src.colortext import colorize
+from src.errors import (
+    path_doesnt_exist_message,
+    unknown_arguments_message,
+    missing_required_arguments_message,
+    path_leads_to_file_instead_of_dir_message,
+)
 
 
 class Cd:
@@ -20,25 +25,21 @@ class Cd:
             args, unknown_args = self.parser.parse_known_args(args=_args)
         except ArgumentError as e:
             missing_args = e.message[e.message.index(":") + 2 :]
-            logger.error("Missing required arguments: %s", missing_args)
-            msg1 = colorize(text="Missing required arguments:", color="red")
-            msg2 = colorize(text=missing_args, color="red", bold=True)
-            print(msg1, msg2, sep=" ")
+            missing_required_arguments_message(missing_args_str=missing_args)
             return str(Path(cwd).resolve())
 
         if len(unknown_args) > 0:
-            logger.warning("Invalid args: %s", ", ".join(unknown_args))
+            unknown_arguments_message(unknown_args=unknown_args)
 
         if args.path == "~":
             return str(Path().home().resolve())
 
-        path = f"{cwd}\{args.path}"
+        path = args.path if isabs(args.path) else f"{cwd}\{args.path}"
+        if isfile(path):
+            path_leads_to_file_instead_of_dir_message(path=path)
+            return str(Path(cwd).resolve())
         if not access(path=path, mode=F_OK):
-            logger.warning('Path "%s" doesn\'t exist', path)
-            msg1 = colorize(text="Path", color="red")
-            msg2 = colorize(text=path, color="red", bold=True)
-            msg3 = colorize(text="doesn't exist", color="red")
-            print(msg1, msg2, msg3, sep=" ")
+            path_doesnt_exist_message(path=path)
             return str(Path(cwd).resolve())
 
         return str(Path(path).resolve())
