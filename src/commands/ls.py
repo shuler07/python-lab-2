@@ -1,7 +1,7 @@
 from os import listdir, access, F_OK, R_OK, W_OK
 from os.path import getsize, getctime, getmtime
 from datetime import datetime as dt
-import argparse
+from argparse import ArgumentParser
 
 from src.logger import logger
 from src.colortext import colorize
@@ -16,12 +16,12 @@ from src.constants import (
 class Ls:
 
     def __init__(self) -> None:
-        parser = argparse.ArgumentParser(
+        parser = ArgumentParser(
             prog="ls",
             description="Show files and folders in current or specified folder",
             exit_on_error=False,
         )
-        parser.add_argument("path", help="Set path", nargs="?")
+        parser.add_argument("path", help='Directory path (default = ".")', nargs="?")
         parser.add_argument(
             "-l",
             "--list",

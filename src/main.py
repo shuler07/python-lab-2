@@ -3,6 +3,7 @@ from pathlib import Path
 
 from src.commands.ls import Ls
 from src.commands.cd import Cd
+from src.commands.cat import Cat
 from src.logger import logger
 from src.colortext import colorize
 
@@ -11,16 +12,14 @@ class Terminal3000:
 
     def __init__(self) -> None:
         self.cwd = getcwd()
-        self.commands: dict[str, Ls | Cd] = {
-            "ls": Ls(),
-            "cd": Cd(),
-        }
+        self.commands: dict[str, Ls | Cd | Cat] = {"ls": Ls(), "cd": Cd(), "cat": Cat()}
 
         self.help_message = f"""
 This is Terminal3000 - very powerful tool for you
 Available commands:
     ls - {self.commands['ls'].parser.description}
     cd - {self.commands['cd'].parser.description}
+    cat - {self.commands['cat'].parser.description}
     help - Show this help message
     quit - Quit Terminal3000 :(
 """
@@ -46,6 +45,8 @@ Available commands:
                 self.commands["ls"].execute(cwd=self.cwd, _args=cmd[1:])
             case "cd":
                 self.cwd = self.commands["cd"].execute(cwd=self.cwd, _args=cmd[1:])  # type: ignore
+            case "cat":
+                self.commands["cat"].execute(cwd=self.cwd, _args=cmd[1:])
             case "help":
                 print(self.help_message)
             case "quit":

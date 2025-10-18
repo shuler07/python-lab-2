@@ -1,21 +1,20 @@
-from pathlib import Path
-from argparse import ArgumentParser, ArgumentError
 from os import access, F_OK
+from argparse import ArgumentParser, ArgumentError
 
 from src.logger import logger
 from src.colortext import colorize
 
 
-class Cd:
+class Cat:
 
     def __init__(self) -> None:
         parser = ArgumentParser(
-            prog="cd", description="Change current directory", exit_on_error=False
+            prog="cat", description="Output file contents", exit_on_error=False
         )
-        parser.add_argument("path", help="Directory path")
+        parser.add_argument("path", help="File path")
         self.parser = parser
 
-    def execute(self, cwd: str, _args: list[str]) -> str:
+    def execute(self, cwd: str, _args: list[str]) -> None:
         try:
             args, unknown_args = self.parser.parse_known_args(args=_args)
         except ArgumentError as e:
@@ -24,13 +23,10 @@ class Cd:
             msg1 = colorize(text="Missing required arguments:", color="red")
             msg2 = colorize(text=missing_args, color="red", bold=True)
             print(msg1, msg2, sep=" ")
-            return str(Path(cwd).resolve())
+            return
 
         if len(unknown_args) > 0:
             logger.warning("Invalid args: %s", ", ".join(unknown_args))
-
-        if args.path == "~":
-            return str(Path().home().resolve())
 
         path = f"{cwd}\{args.path}"
         if not access(path=path, mode=F_OK):
@@ -39,6 +35,16 @@ class Cd:
             msg2 = colorize(text=path, color="red", bold=True)
             msg3 = colorize(text="doesn't exist", color="red")
             print(msg1, msg2, msg3, sep=" ")
-            return str(Path(cwd).resolve())
+            return
 
-        return str(Path(path).resolve())
+        try:
+            with open(path) as f:
+                for line in f:
+                    print(line.rstrip("\n"))
+        except PermissionError:
+            logger.error('Directory path received instead of file path: "%s"', path)
+            msg1 = colorize(
+                text="Directory path received instead of file path:", color="red"
+            )
+            msg2 = colorize(text=path, color="red", bold=True)
+            print(msg1, msg2, sep=" ")
