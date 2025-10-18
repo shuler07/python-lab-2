@@ -20,7 +20,7 @@ class Ls:
             description="Show files and folders in current or specified folder",
             exit_on_error=False,
         )
-        parser.add_argument("-p", "--path", help="Set path", default=".")
+        parser.add_argument("path", help="Set path", nargs='?')
         parser.add_argument(
             "-l",
             "--list",
@@ -33,7 +33,7 @@ class Ls:
         args, unknown_args = self.parser.parse_known_args(args=_args)
         if len(unknown_args) > 0:
             logger.warning("Invalid args: %s", ", ".join(unknown_args))
-        path = f"{cwd}/{args.path}"
+        path = f"{cwd}/{args.path if args.path else '.'}"
 
         if args.list:
             max_len_elem = max(max(len(x) for x in listdir(path=path)), 9)
