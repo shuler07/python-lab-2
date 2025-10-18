@@ -22,7 +22,7 @@ Available commands:
     ls - {self.commands['ls'].parser.description}
     cd - {self.commands['cd'].parser.description}
     help - Show this help message
-    quit - Quit Terminal3000
+    quit - Quit Terminal3000 :(
 """
 
     def start(self) -> None:
@@ -45,7 +45,7 @@ Available commands:
             case "ls":
                 self.commands["ls"].execute(cwd=self.cwd, _args=cmd[1:])
             case "cd":
-                self.cwd = self.commands["cd"].execute(cwd=self.cwd, _args=cmd[1:]) # type: ignore
+                self.cwd = self.commands["cd"].execute(cwd=self.cwd, _args=cmd[1:])  # type: ignore
             case "help":
                 print(self.help_message)
             case "quit":

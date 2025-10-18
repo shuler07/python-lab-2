@@ -1,4 +1,4 @@
-from os import listdir, access, R_OK, W_OK
+from os import listdir, access, F_OK, R_OK, W_OK
 from os.path import getsize, getctime, getmtime
 from datetime import datetime as dt
 import argparse
@@ -34,7 +34,15 @@ class Ls:
         args, unknown_args = self.parser.parse_known_args(args=_args)
         if len(unknown_args) > 0:
             logger.warning("Invalid args: %s", ", ".join(unknown_args))
-        path = f"{cwd}/{args.path if args.path else '.'}"
+
+        path = f"{cwd}\{args.path if args.path else '.'}"
+        if not access(path=path, mode=F_OK):
+            logger.warning('Path "%s" doesn\'t exist', path)
+            msg1 = colorize(text="Path", color="red")
+            msg2 = colorize(text=path, color="red", bold=True)
+            msg3 = colorize(text="doesn't exist", color="red")
+            print(msg1, msg2, msg3, sep=" ")
+            return
 
         if args.list:
             max_len_elem = max(max(len(x) for x in listdir(path=path)), 9)
@@ -50,19 +58,19 @@ class Ls:
                 return f"{x: <{max_len_elem}}"
 
             def el_size(x: str) -> str:
-                return f"{getsize(f'{path}/{x}'): <{LS_FILE_SIZE_COLUMN_WIDTH}}"
+                return f"{getsize(f'{path}\{x}'): <{LS_FILE_SIZE_COLUMN_WIDTH}}"
 
             def el_created(x: str) -> str:
-                return f"{str(dt.fromtimestamp(getctime(f'{path}/{x}')).strftime(LS_DATETIME_FORMAT)): <{LS_DATETIME_COLUMN_WIDTH}}"
+                return f"{str(dt.fromtimestamp(getctime(f'{path}\{x}')).strftime(LS_DATETIME_FORMAT)): <{LS_DATETIME_COLUMN_WIDTH}}"
 
             def el_modified(x: str) -> str:
-                return f"{str(dt.fromtimestamp(getmtime(f'{path}/{x}')).strftime(LS_DATETIME_FORMAT)): <{LS_DATETIME_COLUMN_WIDTH}}"
+                return f"{str(dt.fromtimestamp(getmtime(f'{path}\{x}')).strftime(LS_DATETIME_FORMAT)): <{LS_DATETIME_COLUMN_WIDTH}}"
 
             def el_access(x: str) -> str:
                 perms = []
-                if access(f"{path}/{x}", R_OK):
+                if access(f"{path}\{x}", R_OK):
                     perms.append("Read")
-                if access(f"{path}/{x}", W_OK):
+                if access(f"{path}\{x}", W_OK):
                     perms.append("Write")
                 return f"{', '.join(perms): <{LS_PERMS_COLUMN_WIDTH}}"
 
