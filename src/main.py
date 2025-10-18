@@ -4,6 +4,7 @@ from pathlib import Path
 from src.commands.ls import Ls
 from src.commands.cd import Cd
 from src.commands.cat import Cat
+from src.commands.cp import Cp
 from src.logger import logger
 from src.colortext import colorize
 
@@ -12,10 +13,11 @@ class Terminal3000:
 
     def __init__(self) -> None:
         self.cwd = getcwd()
-        self.commands: dict[str, Ls | Cd | Cat] = {
+        self.commands: dict[str, Ls | Cd | Cat | Cp] = {
             "ls": Ls(),
             "cd": Cd(),
             "cat": Cat(),
+            "cp": Cp(),
         }
 
         self.help_message = f"""
@@ -24,6 +26,7 @@ Available commands:
     ls - {self.commands['ls'].parser.description}
     cd - {self.commands['cd'].parser.description}
     cat - {self.commands['cat'].parser.description}
+    cp - {self.commands['cp'].parser.description}
     help - Show this help message
     quit - Quit Terminal3000 :(
 """
@@ -51,6 +54,8 @@ Available commands:
                 self.cwd = self.commands["cd"].execute(cwd=self.cwd, _args=cmd[1:])  # type: ignore
             case "cat":
                 self.commands["cat"].execute(cwd=self.cwd, _args=cmd[1:])
+            case "cp":
+                self.commands["cp"].execute(cwd=self.cwd, _args=cmd[1:])
             case "help":
                 print(self.help_message)
             case "quit":
