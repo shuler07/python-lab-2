@@ -75,7 +75,7 @@ def permission_denied_message(*paths: str) -> None:
 def src_and_dst_are_the_same_message(path: str) -> None:
     path = clear_path(path=path)
 
-    logger.error("Source and destination are equal: %s", path)
+    logger.error('Source and destination are equal: "%s"', path)
 
     msg1 = colorize(text="Source and destination are equal:", color="red")
     msg2 = colorize(text=path, color="red", bold=True)

@@ -5,6 +5,7 @@ from src.commands.ls import Ls
 from src.commands.cd import Cd
 from src.commands.cat import Cat
 from src.commands.cp import Cp
+from src.commands.mv import Mv
 from src.logger import logger
 from src.colortext import colorize
 
@@ -13,11 +14,12 @@ class Terminal3000:
 
     def __init__(self) -> None:
         self.cwd = getcwd()
-        self.commands: dict[str, Ls | Cd | Cat | Cp] = {
+        self.commands: dict[str, Ls | Cd | Cat | Cp | Mv] = {
             "ls": Ls(),
             "cd": Cd(),
             "cat": Cat(),
             "cp": Cp(),
+            "mv": Mv(),
         }
 
         self.help_message = f"""
@@ -27,7 +29,9 @@ Available commands:
     cd - {self.commands['cd'].parser.description}
     cat - {self.commands['cat'].parser.description}
     cp - {self.commands['cp'].parser.description}
+    mv - {self.commands['mv'].parser.description}
     help - Show this help message
+    cls - Clean screen
     quit - Quit Terminal3000 :(
 """
 
@@ -56,8 +60,12 @@ Available commands:
                 self.commands["cat"].execute(cwd=self.cwd, _args=cmd[1:])
             case "cp":
                 self.commands["cp"].execute(cwd=self.cwd, _args=cmd[1:])
+            case "mv":
+                self.commands["mv"].execute(cwd=self.cwd, _args=cmd[1:])
             case "help":
                 print(self.help_message)
+            case "cls":
+                sys("cls")
             case "quit":
                 return
             case _:
