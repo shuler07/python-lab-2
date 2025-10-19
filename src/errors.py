@@ -61,11 +61,22 @@ def path_leads_to_file_instead_of_dir_message(path: str) -> None:
     print(msg1, msg2, sep=" ")
 
 
-def permission_denied_message(path: str) -> None:
-    path = clear_path(path=path)
+def permission_denied_message(*paths: str) -> None:
+    for path in paths:
+        path = clear_path(path=path)
 
-    logger.error("Permission denied: %s", path)
+    logger.error("Permission denied: %s", " or ".join(f'"{path}"' for path in paths))
 
     msg1 = colorize(text="Permission denied:", color="red")
+    msg2 = colorize(text=" or ".join(paths), color="red", bold=True)
+    print(msg1, msg2, sep=" ")
+
+
+def src_and_dst_are_the_same_message(path: str) -> None:
+    path = clear_path(path=path)
+
+    logger.error("Source and destination are equal: %s", path)
+
+    msg1 = colorize(text="Source and destination are equal:", color="red")
     msg2 = colorize(text=path, color="red", bold=True)
     print(msg1, msg2, sep=" ")

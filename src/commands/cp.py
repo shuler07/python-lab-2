@@ -1,4 +1,4 @@
-from shutil import copy, copytree
+from shutil import copy, copytree, SameFileError
 from os import access, F_OK
 from os.path import isabs, isfile
 from argparse import ArgumentParser, ArgumentError
@@ -9,6 +9,7 @@ from src.errors import (
     missing_required_arguments_message,
     path_leads_to_file_instead_of_dir_message,
     permission_denied_message,
+    src_and_dst_are_the_same_message,
 )
 
 
@@ -53,10 +54,11 @@ class Cp:
             try:
                 copytree(src=srcpath, dst=dstpath, dirs_exist_ok=True)
             except PermissionError:
-                permission_denied_message(path=srcpath)
-
+                permission_denied_message(srcpath, dstpath)
         else:
             try:
                 copy(src=srcpath, dst=dstpath)
             except PermissionError:
-                permission_denied_message(path=srcpath)
+                permission_denied_message(srcpath, dstpath)
+            except SameFileError:
+                src_and_dst_are_the_same_message(path=srcpath)
