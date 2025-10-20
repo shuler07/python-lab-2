@@ -80,3 +80,13 @@ def src_and_dst_are_the_same_message(path: str) -> None:
     msg1 = colorize(text="Source and destination are equal:", color="red")
     msg2 = colorize(text=path, color="red", bold=True)
     print(msg1, msg2, sep=" ")
+
+
+def path_doesnt_lead_to_zipfile_message(path: str) -> None:
+    path = clear_path(path=path)
+
+    logger.error('Path doesn\'t lead to zipfile: "%s"', path)
+
+    msg1 = colorize(text="Path doesn't lead to zipfile:", color="red")
+    msg2 = colorize(text=path, color="red", bold=True)
+    print(msg1, msg2, sep=" ")

@@ -19,6 +19,7 @@ class Mv:
         parser = ArgumentParser(
             prog="mv",
             description="Move file or folder from source to destination, rename file or folder",
+            exit_on_error=False,
         )
         parser.add_argument(
             "src", help="Source of file or folder to move from or rename"

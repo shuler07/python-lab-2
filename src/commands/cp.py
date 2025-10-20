@@ -17,7 +17,9 @@ class Cp:
 
     def __init__(self) -> None:
         parser = ArgumentParser(
-            prog="cp", description="Copy file or folder from source to destination"
+            prog="cp",
+            description="Copy file or folder from source to destination",
+            exit_on_error=False,
         )
         parser.add_argument("src", help="Source of file or folder to copy from")
         parser.add_argument("dst", help="Destination of file or folder to copy where")
