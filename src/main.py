@@ -1,4 +1,5 @@
 from os import system as sys, getcwd
+import shlex
 
 from src.commands.ls import Ls
 from src.commands.cd import Cd
@@ -66,7 +67,7 @@ Available commands:
         self.process_command(command=command)
 
     def process_command(self, command: str) -> None:
-        cmd = command.split()
+        cmd = shlex.split(command.replace('\\', '/'))
 
         match cmd[0]:
             case "ls":
