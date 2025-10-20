@@ -1,5 +1,4 @@
 from os import system as sys, getcwd
-from pathlib import Path
 
 from src.commands.ls import Ls
 from src.commands.cd import Cd
@@ -11,6 +10,7 @@ from src.commands.zip import Zip
 from src.commands.unzip import Unzip
 from src.commands.tar import Tar
 from src.commands.untar import Untar
+
 from src.logger import logger
 from src.colortext import colorize
 
@@ -58,7 +58,7 @@ Available commands:
 
     def await_command(self) -> None:
         msg1 = colorize(text="[T3000]", color="green", bold=True)
-        msg2 = colorize(text=f"{Path(self.cwd)} #", color="green")
+        msg2 = colorize(text=f"{self.cwd} #", color="green")
         command = input(f"{msg1} {msg2} \033[0;30m")
         logger.info("Received: %s", command)
 

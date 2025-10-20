@@ -43,7 +43,7 @@ class Zip:
             path_leads_to_file_instead_of_dir_message(path=path)
             return
 
-        zipname = args.name if args.name.endswith('.zip') else f'{args.name}.zip'
+        zipname = args.name if args.name.endswith(".zip") else f"{args.name}.zip"
         with ZipFile(file=zipname, mode="w") as zipw:
             for root, _, files in walk(top=path):
                 for file in files:

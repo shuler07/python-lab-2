@@ -43,7 +43,7 @@ class Tar:
             path_leads_to_file_instead_of_dir_message(path=path)
             return
 
-        tarname = args.name if args.name.endswith('.tar') else f'{args.name}.tar'
+        tarname = args.name if args.name.endswith(".tar") else f"{args.name}.tar"
         with TarFile(name=tarname, mode="w") as zipw:
             for root, _, files in walk(top=path):
                 for file in files:
