@@ -1,6 +1,6 @@
 from os import access, F_OK, walk
 from os.path import isabs, isfile, join
-from zipfile import ZipFile
+from tarfile import TarFile
 from argparse import ArgumentParser, ArgumentError
 
 from src.errors import (
@@ -11,16 +11,16 @@ from src.errors import (
 )
 
 
-class Zip:
+class Tar:
 
     def __init__(self):
         parser = ArgumentParser(
-            prog="zip",
-            description="Create zip archive from folder",
+            prog="tar",
+            description="Create tar archive from folder",
             exit_on_error=False,
         )
-        parser.add_argument("path", help="Path to folder to zip")
-        parser.add_argument("name", help="Zip archive name")
+        parser.add_argument("path", help="Path to folder to tar")
+        parser.add_argument("name", help="Tar archive name")
         self.parser = parser
 
     def execute(self, cwd: str, _args: list[str]) -> None:
@@ -43,8 +43,8 @@ class Zip:
             path_leads_to_file_instead_of_dir_message(path=path)
             return
 
-        with ZipFile(file=args.name, mode="w") as zipw:
+        with TarFile(name=args.name, mode="w") as zipw:
             for root, _, files in walk(top=path):
                 for file in files:
                     filepath = join(root, file)
-                    zipw.write(filename=filepath)
+                    zipw.add(name=filepath)

@@ -1,26 +1,23 @@
-from os import access, F_OK, walk
-from os.path import isabs, isfile, join
-from zipfile import ZipFile
+from os import access, F_OK
+from os.path import isabs
+from tarfile import TarFile, is_tarfile
 from argparse import ArgumentParser, ArgumentError
 
 from src.errors import (
     path_doesnt_exist_message,
     missing_required_arguments_message,
     unknown_arguments_message,
-    path_leads_to_file_instead_of_dir_message,
+    path_doesnt_lead_to_tarfile_message,
 )
 
 
-class Zip:
+class Untar:
 
     def __init__(self):
         parser = ArgumentParser(
-            prog="zip",
-            description="Create zip archive from folder",
-            exit_on_error=False,
+            prog="untar", description="Untar archive to folder", exit_on_error=False
         )
-        parser.add_argument("path", help="Path to folder to zip")
-        parser.add_argument("name", help="Zip archive name")
+        parser.add_argument("path", help="Path to tar archive")
         self.parser = parser
 
     def execute(self, cwd: str, _args: list[str]) -> None:
@@ -39,12 +36,9 @@ class Zip:
             path_doesnt_exist_message(path=path)
             return
 
-        if isfile(path):
-            path_leads_to_file_instead_of_dir_message(path=path)
+        if not is_tarfile(name=path):
+            path_doesnt_lead_to_tarfile_message(path=path)
             return
 
-        with ZipFile(file=args.name, mode="w") as zipw:
-            for root, _, files in walk(top=path):
-                for file in files:
-                    filepath = join(root, file)
-                    zipw.write(filename=filepath)
+        with TarFile(name=path, mode="r") as zipr:
+            zipr.extractall()

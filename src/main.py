@@ -9,6 +9,8 @@ from src.commands.mv import Mv
 from src.commands.rm import Rm
 from src.commands.zip import Zip
 from src.commands.unzip import Unzip
+from src.commands.tar import Tar
+from src.commands.untar import Untar
 from src.logger import logger
 from src.colortext import colorize
 
@@ -17,7 +19,9 @@ class Terminal3000:
 
     def __init__(self) -> None:
         self.cwd = getcwd()
-        self.commands: dict[str, Ls | Cd | Cat | Cp | Mv | Rm | Zip | Unzip] = {
+        self.commands: dict[
+            str, Ls | Cd | Cat | Cp | Mv | Rm | Zip | Unzip | Tar | Untar
+        ] = {
             "ls": Ls(),
             "cd": Cd(),
             "cat": Cat(),
@@ -26,6 +30,8 @@ class Terminal3000:
             "rm": Rm(),
             "zip": Zip(),
             "unzip": Unzip(),
+            "tar": Tar(),
+            "untar": Untar(),
         }
 
         self.help_message = f"""
@@ -39,6 +45,8 @@ Available commands:
     rm - {self.commands['rm'].parser.description}
     zip - {self.commands['zip'].parser.description}
     unzip - {self.commands['unzip'].parser.description}
+    tar - {self.commands['tar'].parser.description}
+    untar - {self.commands['untar'].parser.description}
     help - Show this help message
     cls - Clean screen
     quit - Quit Terminal3000 :(
@@ -77,6 +85,10 @@ Available commands:
                 self.commands["zip"].execute(cwd=self.cwd, _args=cmd[1:])
             case "unzip":
                 self.commands["unzip"].execute(cwd=self.cwd, _args=cmd[1:])
+            case "tar":
+                self.commands["tar"].execute(cwd=self.cwd, _args=cmd[1:])
+            case "untar":
+                self.commands["untar"].execute(cwd=self.cwd, _args=cmd[1:])
             case "help":
                 print(self.help_message)
             case "cls":
