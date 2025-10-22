@@ -100,3 +100,13 @@ def path_doesnt_lead_to_tarfile_message(path: str) -> None:
     msg1 = colorize(text="Path doesn't lead to tarfile:", color="red")
     msg2 = colorize(text=path, color="red", bold=True)
     print(msg1, msg2, sep=" ")
+
+
+def attempt_to_remove_parent_path_message(path: str) -> None:
+    path = clear_path(path=path)
+
+    logger.error("Attempt to remove parent path: %s", path)
+
+    msg1 = colorize(text="Attempt to remove parent path:", color="red")
+    msg2 = colorize(text=path, color="red", bold=True)
+    print(msg1, msg2, sep=" ")

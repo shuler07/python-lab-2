@@ -9,6 +9,8 @@ from src.errors import (
     unknown_arguments_message,
     path_leads_to_dir_instead_of_file_message,
     path_leads_to_file_instead_of_dir_message,
+    attempt_to_remove_parent_path_message,
+    clear_path,
 )
 
 
@@ -41,6 +43,9 @@ class Rm:
         path = args.path if isabs(args.path) else f"{cwd}\{args.path}"
         if not access(path=path, mode=F_OK):
             path_doesnt_exist_message(path=path)
+            return
+        if clear_path(path=path) in cwd:
+            attempt_to_remove_parent_path_message(path=path)
             return
 
         if args.recursive:
