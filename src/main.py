@@ -86,13 +86,13 @@ Available commands:
                 self.commands[cmd[0]].execute(cwd=self.cwd, _args=cmd[1:])
                 self.commands["history"].write(cmd=command)
             case "cd":
-                self.cwd = self.commands["cd"].execute(cwd=self.cwd, _args=cmd[1:])  # type: ignore
+                self.cwd = self.commands["cd"].execute(cwd=self.cwd, _args=cmd[1:])
                 self.commands["history"].write(cmd=command)
             case "history":
                 self.commands["history"].execute(_args=cmd[1:])
             case "undo":
                 self.commands["undo"].execute(
-                    mark_undone_cmd=self.commands["history"].mark_undone  # type: ignore
+                    mark_undone_cmd=self.commands["history"].mark_undone
                 )
             case "help":
                 print(self.help_message)
