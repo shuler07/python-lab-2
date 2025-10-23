@@ -116,3 +116,15 @@ def unsupported_file_format_message(path: str) -> None:
     path = clear_path(path=path)
 
     logger.error("Unsupported file format: %s", path)
+
+
+def history_file_not_found_message() -> None:
+    logger.error("History file not found")
+
+    print(colorize(text="History file not found", color="red"))
+
+
+def command_to_undo_not_found_message() -> None:
+    logger.error("Not found any command to undo")
+
+    print(colorize(text="Not found any command to undo", color="red"))
