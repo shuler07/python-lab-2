@@ -11,6 +11,7 @@ from src.commands.zip import Zip
 from src.commands.unzip import Unzip
 from src.commands.tar import Tar
 from src.commands.untar import Untar
+from src.commands.grep import Grep
 
 from src.logger import logger
 from src.colortext import colorize
@@ -21,7 +22,7 @@ class Terminal3000:
     def __init__(self) -> None:
         self.cwd = getcwd()
         self.commands: dict[
-            str, Ls | Cd | Cat | Cp | Mv | Rm | Zip | Unzip | Tar | Untar
+            str, Ls | Cd | Cat | Cp | Mv | Rm | Zip | Unzip | Tar | Untar | Grep
         ] = {
             "ls": Ls(),
             "cd": Cd(),
@@ -33,6 +34,7 @@ class Terminal3000:
             "unzip": Unzip(),
             "tar": Tar(),
             "untar": Untar(),
+            "grep": Grep(),
         }
 
         self.help_message = f"""
@@ -48,6 +50,7 @@ Available commands:
     unzip - {self.commands['unzip'].parser.description}
     tar - {self.commands['tar'].parser.description}
     untar - {self.commands['untar'].parser.description}
+    grep - {self.commands['grep'].parser.description}
     help - Show this help message
     cls - Clean screen
     quit - Quit Terminal3000 :(
@@ -61,13 +64,14 @@ Available commands:
         msg1 = colorize(text="[T3000]", color="green", bold=True)
         msg2 = colorize(text=f"{self.cwd} #", color="green")
         command = input(f"{msg1} {msg2} \033[0;30m")
+
         logger.info("Received: %s", command)
 
         print("\033[0m", end="")
         self.process_command(command=command)
 
     def process_command(self, command: str) -> None:
-        cmd = shlex.split(command.replace('\\', '/'))
+        cmd = shlex.split(command.replace("\\", "/"))
 
         match cmd[0]:
             case "ls":
@@ -90,6 +94,8 @@ Available commands:
                 self.commands["tar"].execute(cwd=self.cwd, _args=cmd[1:])
             case "untar":
                 self.commands["untar"].execute(cwd=self.cwd, _args=cmd[1:])
+            case "grep":
+                self.commands["grep"].execute(cwd=self.cwd, _args=cmd[1:])
             case "help":
                 print(self.help_message)
             case "cls":

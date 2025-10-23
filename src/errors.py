@@ -110,3 +110,9 @@ def attempt_to_remove_parent_path_message(path: str) -> None:
     msg1 = colorize(text="Attempt to remove parent path:", color="red")
     msg2 = colorize(text=path, color="red", bold=True)
     print(msg1, msg2, sep=" ")
+
+
+def unsupported_file_format_message(path: str) -> None:
+    path = clear_path(path=path)
+
+    logger.error("Unsupported file format: %s", path)
