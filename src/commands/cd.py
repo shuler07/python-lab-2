@@ -47,6 +47,7 @@ class Cd:
             path_doesnt_exist_message(path=path)
             return str(Path(cwd).resolve())
 
+        cmd_history.write(cmd=f"cd {path}")
         return path
 
 

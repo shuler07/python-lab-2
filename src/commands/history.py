@@ -1,5 +1,6 @@
 from os import access, F_OK
 from argparse import ArgumentParser
+from datetime import datetime
 
 from src.errors import unknown_arguments_message, history_file_not_found_message
 
@@ -14,6 +15,8 @@ class History:
             "-c", "--count", help="Show certain amount of last commands"
         )
         self.parser = parser
+        self.initiated = False
+        self.count = 1
 
     def execute(self, _args: list[str]) -> None:
         args, unknown_args = self.parser.parse_known_args(args=_args)
@@ -34,21 +37,30 @@ class History:
 
     def write(self, cmd: str) -> None:
         if access(path="./.history", mode=F_OK):
-            lines_count = len(open(file="./.history").readlines())
             with open(file="./.history", mode="a") as f:
-                f.write(f"({lines_count + 1}) {cmd}\n")
+                if not self.initiated:
+                    date = datetime.strftime(datetime.now(), format="%Y/%m/%d %H:%M:%S")
+                    f.write(f"New session {date}\n")
+                    self.initiated = True
+                f.write(f"({self.count}) {cmd}\n")
+                self.count += 1
         else:
             with open(file="./.history", mode="x") as f:
+                if not self.initiated:
+                    date = datetime.strftime(datetime.now(), format="%Y/%m/%d %H:%M:%S")
+                    f.write(f"New session {date}\n")
+                    self.initiated = True
                 f.write(f"(1) {cmd}\n")
+                self.count = 2
 
-    def mark_undone(self, n: int) -> None:
+    def mark_undone(self, line: int) -> None:
         lines = open(file="./.history").readlines()
         with open(file="./.history", mode="w") as f:
-            for i, line in enumerate(lines, start=1):
-                if i != n:
-                    f.write(line)
+            for _line, cmd in enumerate(lines):
+                if _line != line:
+                    f.write(cmd)
                 else:
-                    f.write(f"{line.rstrip()} (undone)\n")
+                    f.write(f"{cmd.rstrip()} (undone)\n")
 
 
 cmd_history = History()

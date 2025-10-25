@@ -10,7 +10,6 @@ class Logger:
             filename="t3000.log",
             datefmt="%Y/%m/%d %H:%M:%S",
             format=format,
-            filemode="w",
         )
         self.logger = logging.getLogger("t3000.log")
 

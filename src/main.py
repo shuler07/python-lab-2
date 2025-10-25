@@ -95,6 +95,7 @@ Available commands:
             case "cls":
                 sys("cls")
             case "quit":
+                self.commands["rm"].clear_trash()
                 return
             case _:
                 logger.error(

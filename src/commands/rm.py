@@ -1,7 +1,7 @@
-from os import access, F_OK, remove
+from os import access, F_OK, mkdir
 from os.path import isabs, isdir, isfile
 from pathlib import Path
-from shutil import rmtree
+from shutil import move, rmtree
 from argparse import ArgumentParser, ArgumentError
 
 from src.commands.history import cmd_history
@@ -51,12 +51,15 @@ class Rm:
             attempt_to_remove_parent_path_message(path=path)
             return
 
+        if not access(path="./.trash", mode=F_OK):
+            mkdir("./.trash")
+
         if args.recursive:
             if isfile(path):
                 path_leads_to_file_instead_of_dir_message(path=path)
                 return
 
-            rmtree(path=path)
+            move(src=path, dst="./.trash")
             if cwd:
                 cmd_history.write(cmd=f"rm {path} --recursive")
         else:
@@ -64,9 +67,13 @@ class Rm:
                 path_leads_to_dir_instead_of_file_message(path=path)
                 return
 
-            remove(path=path)
+            move(src=path, dst="./.trash")
             if cwd:
                 cmd_history.write(cmd=f"rm {path}")
+
+    def clear_trash(self) -> None:
+        if access(path="./.trash", mode=F_OK):
+            rmtree("./.trash")
 
 
 cmd_rm = Rm()

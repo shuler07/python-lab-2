@@ -30,7 +30,7 @@ class Mv:
         )
         self.parser = parser
 
-    def execute(self, cwd: str, _args: list[str]) -> None:
+    def execute(self, cwd: str | None, _args: list[str]) -> None:
         try:
             args, unknown_args = self.parser.parse_known_args(args=_args)
         except ArgumentError as e:
@@ -41,15 +41,24 @@ class Mv:
         if len(unknown_args) > 0:
             unknown_arguments_message(unknown_args=unknown_args)
 
-        srcpath = str(Path(args.src if isabs(args.src) else f"{cwd}\{args.src}").resolve())
-        dstpath = str(Path(args.dst if isabs(args.dst) else f"{cwd}\{args.dst}").resolve())
+        if cwd:
+            srcpath = str(
+                Path(args.src if isabs(args.src) else f"{cwd}\{args.src}").resolve()
+            )
+            dstpath = str(
+                Path(args.dst if isabs(args.dst) else f"{cwd}\{args.dst}").resolve()
+            )
+        else:
+            srcpath = str(Path(args.src))
+            dstpath = str(Path(args.dst))
         if not access(path=srcpath, mode=F_OK):
             path_doesnt_exist_message(path=srcpath)
             return
 
         try:
             dstpath = move(src=srcpath, dst=dstpath)
-            cmd_history.write(cmd=f"mv {srcpath} {dstpath}")
+            if cwd:
+                cmd_history.write(cmd=f"mv {srcpath} {dstpath}")
         except PermissionError:
             permission_denied_message(srcpath, dstpath)
         except PathAlreadyExistsError:
@@ -66,7 +75,8 @@ class Mv:
                 dirs_exist_ok=True,
             )
             rmtree(path=srcpath)
-            cmd_history.write(cmd=f"mv {srcpath} {dstpath}")
+            if cwd:
+                cmd_history.write(cmd=f"mv {srcpath} {dstpath}")
 
 
 cmd_mv = Mv()

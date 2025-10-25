@@ -62,7 +62,7 @@ class Cp:
 
             try:
                 cmd_history.write(
-                    cmd=f"cp {srcpath} {copytree(src=srcpath, dst=dstpath, dirs_exist_ok=True)} --recursive"
+                    cmd=f"cp {srcpath} {copytree(src=srcpath, dst=f'{dstpath}\{srcpath.split('\\')[-1]}', dirs_exist_ok=True)} --recursive"
                 )
             except PermissionError:
                 permission_denied_message(srcpath, dstpath)
