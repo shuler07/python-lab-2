@@ -41,16 +41,16 @@ class Terminal3000:
         }
 
         descriptions = [
-            f"{cmd} - {self.commands[cmd].parser.description}"
+            f"\033[1;37m{cmd}\033[0m - {self.commands[cmd].parser.description}"
             for cmd in self.commands.keys()
         ]
         self.help_message = f"""
-This is Terminal3000 - very powerful tool for you
-Available commands:
+\033[1;35mThis is Terminal3000 - very powerful tool for you 💪\033[0m
+\033[1;36mAvailable commands:\033[0m
     {'\n    '.join(descriptions)}
-    help - Show this help message
-    cls - Clean screen
-    quit - Quit Terminal3000 :(
+    \033[1;37mh, help\033[0m - Show this help message
+    \033[1;37mcls, clear\033[0m - Clean screen
+    \033[1;37mq, quit\033[0m - Quit Terminal3000 :(
 """
 
     def start(self) -> None:
@@ -58,8 +58,8 @@ Available commands:
         self.await_command()
 
     def await_command(self) -> None:
-        msg1 = colorize(text="[T3000]", color="green", bold=True)
-        msg2 = colorize(text=f"{self.cwd} 😊", color="green")
+        msg1 = colorize(text="[T-3000]", color="green", bold=True)
+        msg2 = colorize(text=self.cwd, color="green")
         command = input(f"{msg1} {msg2} \033[0;30m")
 
         logger.info("Received: %s", command)
@@ -90,11 +90,11 @@ Available commands:
                 self.commands["history"].execute(_args=cmd[1:])
             case "undo":
                 self.commands["undo"].execute()
-            case "help":
+            case "h" | "help":
                 print(self.help_message)
-            case "cls":
+            case "cls" | "clear":
                 sys("cls")
-            case "quit":
+            case "q" | "quit":
                 self.commands["rm"].clear_trash()
                 return
             case _:
@@ -103,9 +103,9 @@ Available commands:
                 )
                 msg1 = colorize(text=cmd[0], color="red", bold=True)
                 msg2 = colorize(
-                    text="is not recognised as the name of a command", color="red"
+                    text="is not recognised as the name of a command 😞", color="red"
                 )
-                print(f"{msg1} {msg2}")
+                print(msg1, msg2, sep=" ")
 
         self.await_command()
 
