@@ -1,8 +1,10 @@
 from os import access, F_OK, remove
 from os.path import isabs, isdir, isfile
+from pathlib import Path
 from shutil import rmtree
 from argparse import ArgumentParser, ArgumentError
 
+from src.commands.history import cmd_history
 from src.errors import (
     path_doesnt_exist_message,
     missing_required_arguments_message,
@@ -10,7 +12,6 @@ from src.errors import (
     path_leads_to_dir_instead_of_file_message,
     path_leads_to_file_instead_of_dir_message,
     attempt_to_remove_parent_path_message,
-    clear_path,
 )
 
 
@@ -29,7 +30,7 @@ class Rm:
         )
         self.parser = parser
 
-    def execute(self, cwd: str, _args: list[str]) -> None:
+    def execute(self, cwd: str | None, _args: list[str]) -> None:
         try:
             args, unknown_args = self.parser.parse_known_args(args=_args)
         except ArgumentError as e:
@@ -40,11 +41,13 @@ class Rm:
         if len(unknown_args) > 0:
             unknown_arguments_message(unknown_args=unknown_args)
 
-        path = args.path if isabs(args.path) else f"{cwd}\{args.path}"
+        path = str(
+            Path(args.path if isabs(args.path) else f"{cwd}\{args.path}").resolve()
+        )
         if not access(path=path, mode=F_OK):
             path_doesnt_exist_message(path=path)
             return
-        if clear_path(path=path) in cwd:
+        if cwd and str(path) in cwd:
             attempt_to_remove_parent_path_message(path=path)
             return
 
@@ -54,9 +57,16 @@ class Rm:
                 return
 
             rmtree(path=path)
+            if cwd:
+                cmd_history.write(cmd=f"rm {path} --recursive")
         else:
             if isdir(path):
                 path_leads_to_dir_instead_of_file_message(path=path)
                 return
 
             remove(path=path)
+            if cwd:
+                cmd_history.write(cmd=f"rm {path}")
+
+
+cmd_rm = Rm()

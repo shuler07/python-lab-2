@@ -1,3 +1,6 @@
+from pathlib import Path
+
+
 ansi_color_codes = {
     "black": "30m",
     "red": "31m",
@@ -10,5 +13,5 @@ ansi_color_codes = {
 }
 
 
-def colorize(text: str, color: str, bold: bool = False) -> str:
+def colorize(text: str | Path, color: str, bold: bool = False) -> str:
     return f"\033[{1 if bold else 0};{ansi_color_codes[color]}{text}\033[0m"

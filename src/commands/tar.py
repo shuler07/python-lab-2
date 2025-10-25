@@ -1,8 +1,10 @@
 from os import access, F_OK, walk
 from os.path import isabs, isfile, join
+from pathlib import Path
 from tarfile import TarFile
 from argparse import ArgumentParser, ArgumentError
 
+from src.commands.history import cmd_history
 from src.errors import (
     path_doesnt_exist_message,
     missing_required_arguments_message,
@@ -34,7 +36,9 @@ class Tar:
         if len(unknown_args) > 0:
             unknown_arguments_message(unknown_args=unknown_args)
 
-        path = args.path if not isabs(args.path) else f"{cwd}\{args.path}"
+        path = str(
+            Path(args.path if not isabs(args.path) else f"{cwd}\{args.path}").resolve()
+        )
         if not access(path=path, mode=F_OK):
             path_doesnt_exist_message(path=path)
             return
@@ -49,3 +53,7 @@ class Tar:
                 for file in files:
                     filepath = join(root, file)
                     zipw.add(name=filepath)
+        cmd_history.write(cmd=f"tar {path} {tarname}")
+
+
+cmd_tar = Tar()

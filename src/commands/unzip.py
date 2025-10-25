@@ -1,8 +1,10 @@
 from os import access, F_OK
 from os.path import isabs
+from pathlib import Path
 from zipfile import ZipFile, is_zipfile
 from argparse import ArgumentParser, ArgumentError
 
+from src.commands.history import cmd_history
 from src.errors import (
     path_doesnt_exist_message,
     missing_required_arguments_message,
@@ -31,7 +33,9 @@ class Unzip:
         if len(unknown_args) > 0:
             unknown_arguments_message(unknown_args=unknown_args)
 
-        path = args.path if not isabs(args.path) else f"{cwd}\{args.path}"
+        path = str(
+            Path(args.path if not isabs(args.path) else f"{cwd}\{args.path}").resolve()
+        )
         if not access(path=path, mode=F_OK):
             path_doesnt_exist_message(path=path)
             return
@@ -42,3 +46,7 @@ class Unzip:
 
         with ZipFile(file=path, mode="r") as zipr:
             zipr.extractall()
+        cmd_history.write(cmd=f"unzip {path}")
+
+
+cmd_unzip = Unzip()

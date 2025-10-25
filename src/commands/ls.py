@@ -1,8 +1,10 @@
 from os import listdir, access, F_OK, R_OK, W_OK
 from os.path import isfile, isabs, getsize, getctime, getmtime
+from pathlib import Path
 from datetime import datetime as dt
 from argparse import ArgumentParser
 
+from src.commands.history import cmd_history
 from src.errors import (
     path_doesnt_exist_message,
     unknown_arguments_message,
@@ -39,10 +41,9 @@ class Ls:
         if len(unknown_args) > 0:
             unknown_arguments_message(unknown_args=unknown_args)
 
-        if args.path is None:
-            args.path = "."
+        args.path = args.path if args.path else "."
 
-        path = args.path if isabs(args.path) else f"{cwd}\{args.path}"
+        path = str(Path(args.path if isabs(args.path) else f"{cwd}\{args.path}").resolve())
         if isfile(path):
             path_leads_to_file_instead_of_dir_message(path=path)
             return
@@ -84,5 +85,11 @@ class Ls:
                 print(
                     f"{el_name(el)}  {el_size(el)}  {el_created(el)}  {el_modified(el)}  {el_access(el)}"
                 )
+
+            cmd_history.write(cmd=f"ls {path} --list")
         else:
             [print(elem) for elem in listdir(path=path)]
+            cmd_history.write(cmd=f"ls {path}")
+
+
+cmd_ls = Ls()

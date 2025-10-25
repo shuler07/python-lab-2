@@ -30,15 +30,16 @@ class History:
             if count > 0:
                 print(line.rstrip())
                 count -= 1
+        self.write(cmd=f"history --count {args.count if args.count else 5}")
 
     def write(self, cmd: str) -> None:
         if access(path="./.history", mode=F_OK):
             lines_count = len(open(file="./.history").readlines())
             with open(file="./.history", mode="a") as f:
-                f.write(f"{lines_count + 1}. {cmd}\n")
+                f.write(f"({lines_count + 1}) {cmd}\n")
         else:
             with open(file="./.history", mode="x") as f:
-                f.write(f"1. {cmd}\n")
+                f.write(f"(1) {cmd}\n")
 
     def mark_undone(self, n: int) -> None:
         lines = open(file="./.history").readlines()
@@ -48,3 +49,6 @@ class History:
                     f.write(line)
                 else:
                     f.write(f"{line.rstrip()} (undone)\n")
+
+
+cmd_history = History()

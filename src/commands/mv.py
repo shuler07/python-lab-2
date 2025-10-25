@@ -1,14 +1,15 @@
 from os import access, F_OK
 from os.path import isabs
+from pathlib import Path
 from shutil import move, Error as PathAlreadyExistsError, copytree, rmtree
 from argparse import ArgumentParser, ArgumentError
 
+from src.commands.history import cmd_history
 from src.errors import (
     path_doesnt_exist_message,
     missing_required_arguments_message,
     unknown_arguments_message,
     permission_denied_message,
-    clear_path,
     src_and_dst_are_the_same_message,
 )
 
@@ -40,26 +41,32 @@ class Mv:
         if len(unknown_args) > 0:
             unknown_arguments_message(unknown_args=unknown_args)
 
-        srcpath = args.src if isabs(args.src) else f"{cwd}\{args.src}"
-        dstpath = args.dst if isabs(args.dst) else f"{cwd}\{args.dst}"
+        srcpath = str(Path(args.src if isabs(args.src) else f"{cwd}\{args.src}").resolve())
+        dstpath = str(Path(args.dst if isabs(args.dst) else f"{cwd}\{args.dst}").resolve())
         if not access(path=srcpath, mode=F_OK):
             path_doesnt_exist_message(path=srcpath)
             return
 
         try:
-            move(src=srcpath, dst=dstpath)
+            dstpath = move(src=srcpath, dst=dstpath)
+            cmd_history.write(cmd=f"mv {srcpath} {dstpath}")
         except PermissionError:
             permission_denied_message(srcpath, dstpath)
         except PathAlreadyExistsError:
-            real_src_path = clear_path(srcpath)[: clear_path(srcpath).rindex("\\")]
-            real_dst_path = clear_path(dstpath).rstrip("\\")
+            real_src_path = srcpath[: srcpath.rindex("\\")]
+            real_dst_path = dstpath.rstrip("\\")
             if real_src_path == real_dst_path:
                 src_and_dst_are_the_same_message(path=srcpath)
                 return
 
+            dstpath = f'{dstpath}\{srcpath.split('\\')[-1]}'
             copytree(
                 src=srcpath,
-                dst=f'{dstpath}\{srcpath.split('\\')[-1]}',
+                dst=dstpath,
                 dirs_exist_ok=True,
             )
             rmtree(path=srcpath)
+            cmd_history.write(cmd=f"mv {srcpath} {dstpath}")
+
+
+cmd_mv = Mv()

@@ -2,19 +2,19 @@ from typing import Any
 from os import system as sys, getcwd
 import shlex
 
-from src.commands.ls import Ls
-from src.commands.cd import Cd
-from src.commands.cat import Cat
-from src.commands.cp import Cp
-from src.commands.mv import Mv
-from src.commands.rm import Rm
-from src.commands.zip import Zip
-from src.commands.unzip import Unzip
-from src.commands.tar import Tar
-from src.commands.untar import Untar
-from src.commands.grep import Grep
-from src.commands.history import History
-from src.commands.undo import Undo
+from src.commands.ls import cmd_ls
+from src.commands.cd import cmd_cd
+from src.commands.cat import cmd_cat
+from src.commands.cp import cmd_cp
+from src.commands.mv import cmd_mv
+from src.commands.rm import cmd_rm
+from src.commands.zip import cmd_zip
+from src.commands.unzip import cmd_unzip
+from src.commands.tar import cmd_tar
+from src.commands.untar import cmd_untar
+from src.commands.grep import cmd_grep
+from src.commands.history import cmd_history
+from src.commands.undo import cmd_undo
 
 from src.logger import logger
 from src.colortext import colorize
@@ -25,19 +25,19 @@ class Terminal3000:
     def __init__(self) -> None:
         self.cwd = getcwd()
         self.commands: dict[str, Any] = {
-            "ls": Ls(),
-            "cd": Cd(),
-            "cat": Cat(),
-            "cp": Cp(),
-            "mv": Mv(),
-            "rm": Rm(),
-            "zip": Zip(),
-            "unzip": Unzip(),
-            "tar": Tar(),
-            "untar": Untar(),
-            "grep": Grep(),
-            "history": History(),
-            "undo": Undo(),
+            "ls": cmd_ls,
+            "cd": cmd_cd,
+            "cat": cmd_cat,
+            "cp": cmd_cp,
+            "mv": cmd_mv,
+            "rm": cmd_rm,
+            "zip": cmd_zip,
+            "unzip": cmd_unzip,
+            "tar": cmd_tar,
+            "untar": cmd_untar,
+            "grep": cmd_grep,
+            "history": cmd_history,
+            "undo": cmd_undo,
         }
 
         descriptions = [
@@ -79,21 +79,17 @@ Available commands:
                 | "rm"
                 | "zip"
                 | "unzip"
-                | "tag"
+                | "tar"
                 | "untar"
                 | "grep"
             ):
                 self.commands[cmd[0]].execute(cwd=self.cwd, _args=cmd[1:])
-                self.commands["history"].write(cmd=command)
             case "cd":
                 self.cwd = self.commands["cd"].execute(cwd=self.cwd, _args=cmd[1:])
-                self.commands["history"].write(cmd=command)
             case "history":
                 self.commands["history"].execute(_args=cmd[1:])
             case "undo":
-                self.commands["undo"].execute(
-                    mark_undone_cmd=self.commands["history"].mark_undone
-                )
+                self.commands["undo"].execute()
             case "help":
                 print(self.help_message)
             case "cls":

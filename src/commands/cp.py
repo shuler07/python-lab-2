@@ -1,13 +1,16 @@
-from shutil import copy, copytree, SameFileError
+from shutil import copy, copytree, SameFileError, Error
 from os import access, F_OK
-from os.path import isabs, isfile
+from os.path import isabs, isfile, isdir
+from pathlib import Path
 from argparse import ArgumentParser, ArgumentError
 
+from src.commands.history import cmd_history
 from src.errors import (
     path_doesnt_exist_message,
     unknown_arguments_message,
     missing_required_arguments_message,
     path_leads_to_file_instead_of_dir_message,
+    path_leads_to_dir_instead_of_file_message,
     permission_denied_message,
     src_and_dst_are_the_same_message,
 )
@@ -42,8 +45,12 @@ class Cp:
         if len(unknown_args) > 0:
             unknown_arguments_message(unknown_args=unknown_args)
 
-        srcpath = args.src if isabs(args.src) else f"{cwd}\{args.src}"
-        dstpath = args.dst if isabs(args.dst) else f"{cwd}\{args.dst}"
+        srcpath = str(
+            Path(args.src if isabs(args.src) else f"{cwd}\{args.src}").resolve()
+        )
+        dstpath = str(
+            Path(args.dst if isabs(args.dst) else f"{cwd}\{args.dst}").resolve()
+        )
         if not access(path=srcpath, mode=F_OK):
             path_doesnt_exist_message(path=srcpath)
             return
@@ -54,13 +61,24 @@ class Cp:
                 return
 
             try:
-                copytree(src=srcpath, dst=dstpath, dirs_exist_ok=True)
+                cmd_history.write(
+                    cmd=f"cp {srcpath} {copytree(src=srcpath, dst=dstpath, dirs_exist_ok=True)} --recursive"
+                )
             except PermissionError:
                 permission_denied_message(srcpath, dstpath)
+            except Error:
+                src_and_dst_are_the_same_message(path=srcpath)
         else:
+            if isdir(srcpath):
+                path_leads_to_dir_instead_of_file_message(path=srcpath)
+                return
+
             try:
-                copy(src=srcpath, dst=dstpath)
+                cmd_history.write(cmd=f"cp {srcpath} {copy(src=srcpath, dst=dstpath)}")
             except PermissionError:
                 permission_denied_message(srcpath, dstpath)
             except SameFileError:
                 src_and_dst_are_the_same_message(path=srcpath)
+
+
+cmd_cp = Cp()

@@ -3,6 +3,7 @@ from os.path import isfile, isabs
 from pathlib import Path
 from argparse import ArgumentParser, ArgumentError
 
+from src.commands.history import cmd_history
 from src.errors import (
     path_doesnt_exist_message,
     unknown_arguments_message,
@@ -32,9 +33,13 @@ class Cd:
             unknown_arguments_message(unknown_args=unknown_args)
 
         if args.path == "~":
-            return str(Path().home().resolve())
+            path = str(Path().home().resolve())
+            cmd_history.write(cmd=f"cd {path}")
+            return path
 
-        path = args.path if isabs(args.path) else f"{cwd}\{args.path}"
+        path = str(
+            Path(args.path if isabs(args.path) else f"{cwd}\{args.path}").resolve()
+        )
         if isfile(path):
             path_leads_to_file_instead_of_dir_message(path=path)
             return str(Path(cwd).resolve())
@@ -42,4 +47,7 @@ class Cd:
             path_doesnt_exist_message(path=path)
             return str(Path(cwd).resolve())
 
-        return str(Path(path).resolve())
+        return path
+
+
+cmd_cd = Cd()

@@ -1,8 +1,10 @@
 from os import access, F_OK, listdir, walk
 from os.path import isabs, isfile, join
+from pathlib import Path
 from argparse import ArgumentParser, ArgumentError
 import re
 
+from src.commands.history import cmd_history
 from src.errors import (
     path_doesnt_exist_message,
     missing_required_arguments_message,
@@ -45,7 +47,9 @@ class Grep:
         if len(unknown_args) > 0:
             unknown_arguments_message(unknown_args=unknown_args)
 
-        path = args.path if isabs(args.path) else f"{cwd}\{args.path}"
+        path = str(
+            Path(args.path if isabs(args.path) else f"{cwd}\{args.path}").resolve()
+        )
         if not access(path=path, mode=F_OK):
             path_doesnt_exist_message(path=path)
             return
@@ -63,6 +67,9 @@ class Grep:
                         pattern=args.pattern,
                         insensetive=args.insensetive,
                     )
+            cmd_history.write(
+                cmd=f"grep {path} {args.pattern} --recursive {'--insensetive' if args.insensetive else ''}"
+            )
         else:
             if isfile(path):
                 self.search_pattern(
@@ -77,6 +84,9 @@ class Grep:
                             pattern=args.pattern,
                             insensetive=args.insensetive,
                         )
+            cmd_history.write(
+                cmd=f"grep {path} {args.pattern} {'--insensetive' if args.insensetive else ''}"
+            )
 
     def search_pattern(self, path: str, pattern: str, insensetive: bool) -> None:
         flag = re.IGNORECASE if insensetive else 0
@@ -95,3 +105,6 @@ class Grep:
             print(colorize(text=f"File: {path}", color="blue"), "\033[0m")
             for f in found:
                 print(f)
+
+
+cmd_grep = Grep()

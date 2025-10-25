@@ -2,21 +2,7 @@ from src.logger import logger
 from src.colortext import colorize
 
 
-def clear_path(path: str) -> str:
-    parts = path.replace("\\", "/").split("/")
-    parts = list(part for part in parts if part != ".")
-
-    while ".." in parts:
-        ind = parts.index("..") - 1
-        parts.pop(ind)
-        parts.pop(ind)
-
-    return "\\".join(parts)
-
-
 def path_doesnt_exist_message(path: str) -> None:
-    path = clear_path(path=path)
-
     logger.warning('Path "%s" doesn\'t exist', path)
 
     msg1 = colorize(text="Path", color="red")
@@ -42,8 +28,6 @@ def missing_required_arguments_message(missing_args_str: str) -> None:
 
 
 def path_leads_to_dir_instead_of_file_message(path: str) -> None:
-    path = clear_path(path=path)
-
     logger.error('Directory path received instead of file path: "%s"', path)
 
     msg1 = colorize(text="Directory path received instead of file path:", color="red")
@@ -52,8 +36,6 @@ def path_leads_to_dir_instead_of_file_message(path: str) -> None:
 
 
 def path_leads_to_file_instead_of_dir_message(path: str) -> None:
-    path = clear_path(path=path)
-
     logger.error('File path received instead of directory path: "%s"', path)
 
     msg1 = colorize(text="File path received instead of directory path:", color="red")
@@ -62,9 +44,6 @@ def path_leads_to_file_instead_of_dir_message(path: str) -> None:
 
 
 def permission_denied_message(*paths: str) -> None:
-    for path in paths:
-        path = clear_path(path=path)
-
     logger.error("Permission denied: %s", " or ".join(f'"{path}"' for path in paths))
 
     msg1 = colorize(text="Permission denied:", color="red")
@@ -73,8 +52,6 @@ def permission_denied_message(*paths: str) -> None:
 
 
 def src_and_dst_are_the_same_message(path: str) -> None:
-    path = clear_path(path=path)
-
     logger.error('Source and destination are equal: "%s"', path)
 
     msg1 = colorize(text="Source and destination are equal:", color="red")
@@ -83,8 +60,6 @@ def src_and_dst_are_the_same_message(path: str) -> None:
 
 
 def path_doesnt_lead_to_zipfile_message(path: str) -> None:
-    path = clear_path(path=path)
-
     logger.error('Path doesn\'t lead to zipfile: "%s"', path)
 
     msg1 = colorize(text="Path doesn't lead to zipfile:", color="red")
@@ -93,8 +68,6 @@ def path_doesnt_lead_to_zipfile_message(path: str) -> None:
 
 
 def path_doesnt_lead_to_tarfile_message(path: str) -> None:
-    path = clear_path(path=path)
-
     logger.error('Path doesn\'t lead to tarfile: "%s"', path)
 
     msg1 = colorize(text="Path doesn't lead to tarfile:", color="red")
@@ -103,8 +76,6 @@ def path_doesnt_lead_to_tarfile_message(path: str) -> None:
 
 
 def attempt_to_remove_parent_path_message(path: str) -> None:
-    path = clear_path(path=path)
-
     logger.error("Attempt to remove parent path: %s", path)
 
     msg1 = colorize(text="Attempt to remove parent path:", color="red")
@@ -113,8 +84,6 @@ def attempt_to_remove_parent_path_message(path: str) -> None:
 
 
 def unsupported_file_format_message(path: str) -> None:
-    path = clear_path(path=path)
-
     logger.error("Unsupported file format: %s", path)
 
 

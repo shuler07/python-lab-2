@@ -1,7 +1,9 @@
 from os import access, F_OK
 from os.path import isdir, isabs
+from pathlib import Path
 from argparse import ArgumentParser, ArgumentError
 
+from src.commands.history import cmd_history
 from src.errors import (
     path_doesnt_exist_message,
     unknown_arguments_message,
@@ -31,7 +33,9 @@ class Cat:
         if len(unknown_args) > 0:
             unknown_arguments_message(unknown_args=unknown_args)
 
-        path = args.path if isabs(args.path) else f"{cwd}\{args.path}"
+        path = str(
+            Path(args.path if isabs(args.path) else f"{cwd}\{args.path}").resolve()
+        )
         if not access(path=path, mode=F_OK):
             path_doesnt_exist_message(path=path)
             return
@@ -43,5 +47,9 @@ class Cat:
         try:
             for line in open(path):
                 print(line.rstrip("\n"))
+            cmd_history.write(cmd=f"cat {path}")
         except PermissionError:
             permission_denied_message(path)
+
+
+cmd_cat = Cat()
