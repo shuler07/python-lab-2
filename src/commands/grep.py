@@ -16,6 +16,7 @@ from src.colortext import colorize
 
 
 class Grep:
+    "'grep' command to read file contents"
 
     def __init__(self) -> None:
         parser = ArgumentParser(
@@ -37,6 +38,12 @@ class Grep:
         self.parser = parser
 
     def execute(self, cwd: str, _args: list[str]) -> None:
+        """
+        Execute 'grep' command from given directory with given args
+        Args:
+            cwd (str): directory to execute from
+            _args (list[str]): args for 'grep' command
+        """
         try:
             args, unknown_args = self.parser.parse_known_args(args=_args)
         except ArgumentError as e:
@@ -89,6 +96,13 @@ class Grep:
             )
 
     def search_pattern(self, path: str, pattern: str, insensetive: bool) -> None:
+        """
+        Searching given pattern in given file
+        Args:
+            path (str): file path where to search
+            pattern (str): pattern to search for
+            insensetive (bool): is search case insensetive
+        """
         flag = re.IGNORECASE if insensetive else 0
         pattern = rf"{pattern}"
         found = []

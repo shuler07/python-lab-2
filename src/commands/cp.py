@@ -17,6 +17,7 @@ from src.errors import (
 
 
 class Cp:
+    "'cp' command to read file contents"
 
     def __init__(self) -> None:
         parser = ArgumentParser(
@@ -35,6 +36,12 @@ class Cp:
         self.parser = parser
 
     def execute(self, cwd: str, _args: list[str]) -> None:
+        """
+        Execute 'cp' command from given directory with given args
+        Args:
+            cwd (str): directory to execute from
+            _args (list[str]): args for 'cp' command
+        """
         try:
             args, unknown_args = self.parser.parse_known_args(args=_args)
         except ArgumentError as e:

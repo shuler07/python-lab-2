@@ -14,6 +14,7 @@ from src.errors import (
 
 
 class Tar:
+    "'tar' command to read file contents"
 
     def __init__(self):
         parser = ArgumentParser(
@@ -26,6 +27,12 @@ class Tar:
         self.parser = parser
 
     def execute(self, cwd: str, _args: list[str]) -> None:
+        """
+        Execute 'tar' command from given directory with given args
+        Args:
+            cwd (str): directory to execute from
+            _args (list[str]): args for 'tar' command
+        """
         try:
             args, unknown_args = self.parser.parse_known_args(args=_args)
         except ArgumentError as e:
@@ -37,7 +44,7 @@ class Tar:
             unknown_arguments_message(unknown_args=unknown_args)
 
         path = str(
-            Path(args.path if not isabs(args.path) else f"{cwd}\{args.path}").resolve()
+            Path(args.path if isabs(args.path) else f"{cwd}\{args.path}").resolve()
         )
         if not access(path=path, mode=F_OK):
             path_doesnt_exist_message(path=path)
@@ -47,12 +54,22 @@ class Tar:
             path_leads_to_file_instead_of_dir_message(path=path)
             return
 
+        #  Create valid archive name and correct directory to export where
         tarname = args.name if args.name.endswith(".tar") else f"{args.name}.tar"
-        with TarFile(name=tarname, mode="w") as zipw:
+        tarpath = f"{cwd}\{tarname}"
+
+        with TarFile(name=tarpath, mode="w") as zipw:
+            ind_real_root_begin = None
             for root, _, files in walk(top=path):
+                if ind_real_root_begin is None:
+                    ind_real_root_begin = len(root.split("\\")) - 1
+
+                real_root = join(*root.split("\\")[ind_real_root_begin:])
                 for file in files:
                     filepath = join(root, file)
-                    zipw.add(name=filepath)
+                    arcname = join(real_root, file)
+                    zipw.add(name=filepath, arcname=arcname)
+
         cmd_history.write(cmd=f"tar {path} {tarname}")
 
 

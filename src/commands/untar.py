@@ -14,6 +14,7 @@ from src.errors import (
 
 
 class Untar:
+    "'untar' command to read file contents"
 
     def __init__(self):
         parser = ArgumentParser(
@@ -23,6 +24,12 @@ class Untar:
         self.parser = parser
 
     def execute(self, cwd: str, _args: list[str]) -> None:
+        """
+        Execute 'untar' command from given directory with given args
+        Args:
+            cwd (str): directory to execute from
+            _args (list[str]): args for 'untar' command
+        """
         try:
             args, unknown_args = self.parser.parse_known_args(args=_args)
         except ArgumentError as e:
@@ -34,18 +41,22 @@ class Untar:
             unknown_arguments_message(unknown_args=unknown_args)
 
         path = str(
-            Path(args.path if not isabs(args.path) else f"{cwd}\{args.path}").resolve()
+            Path(args.path if isabs(args.path) else f"{cwd}\{args.path}").resolve()
         )
-        if not access(path=path, mode=F_OK):
-            path_doesnt_exist_message(path=path)
+
+        #  Create valid archive path
+        tarpath = path if path.endswith(".tar") else f"{path}.tar"
+
+        if not access(path=tarpath, mode=F_OK):
+            path_doesnt_exist_message(path=tarpath)
             return
 
-        if not is_tarfile(name=path):
-            path_doesnt_lead_to_tarfile_message(path=path)
+        if not is_tarfile(name=tarpath):
+            path_doesnt_lead_to_tarfile_message(path=tarpath)
             return
 
-        with TarFile(name=path, mode="r") as zipr:
-            zipr.extractall()
+        with TarFile(name=tarpath, mode="r") as zipr:
+            zipr.extractall(filter="fully_trusted")
         cmd_history.write(cmd=f"untar {path}")
 
 

@@ -13,6 +13,7 @@ from src.errors import (
 
 
 class Cd:
+    "'cd' command to read file contents"
 
     def __init__(self) -> None:
         parser = ArgumentParser(
@@ -22,6 +23,14 @@ class Cd:
         self.parser = parser
 
     def execute(self, cwd: str, _args: list[str]) -> str:
+        """
+        Execute 'cd' command from given directory with given args
+        Args:
+            cwd (str): directory to execute from
+            _args (list[str]): args for 'cd' command
+        Returns:
+            str: new current working directory
+        """
         try:
             args, unknown_args = self.parser.parse_known_args(args=_args)
         except ArgumentError as e:
@@ -32,7 +41,7 @@ class Cd:
         if len(unknown_args) > 0:
             unknown_arguments_message(unknown_args=unknown_args)
 
-        if args.path == "~":
+        if args.path == "~":  # Home directory
             path = str(Path().home().resolve())
             cmd_history.write(cmd=f"cd {path}")
             return path

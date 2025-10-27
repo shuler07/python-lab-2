@@ -10,19 +10,27 @@ from src.errors import (
     missing_required_arguments_message,
     path_leads_to_dir_instead_of_file_message,
     permission_denied_message,
+    unsupported_file_format_message,
 )
 
 
 class Cat:
+    "'cat' command to read file contents"
 
     def __init__(self) -> None:
         parser = ArgumentParser(
-            prog="cat", description="Output file contents", exit_on_error=False
+            prog="cat", description="Read file contents", exit_on_error=False
         )
         parser.add_argument("path", help="File path")
         self.parser = parser
 
     def execute(self, cwd: str, _args: list[str]) -> None:
+        """
+        Execute 'cat' command from given directory with given args
+        Args:
+            cwd (str): directory to execute from
+            _args (list[str]): args for 'cat' command
+        """
         try:
             args, unknown_args = self.parser.parse_known_args(args=_args)
         except ArgumentError as e:
@@ -46,10 +54,13 @@ class Cat:
 
         try:
             for line in open(path):
-                print(line.rstrip("\n"))
+                print(line.rstrip("\n"))  # Need cause of empty lines between prints
             cmd_history.write(cmd=f"cat {path}")
         except PermissionError:
             permission_denied_message(path)
+        except UnicodeDecodeError:
+            unsupported_file_format_message(path=path)
+            return
 
 
 cmd_cat = Cat()

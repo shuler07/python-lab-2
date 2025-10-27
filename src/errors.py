@@ -2,6 +2,13 @@ from src.logger import logger
 from src.colortext import colorize
 
 
+def term_is_not_recognised_message(cmd: str) -> None:
+    logger.error('The term "%s" is not recognised as the name of a command', cmd)
+    msg1 = colorize(text=cmd, color="red", bold=True)
+    msg2 = colorize(text="is not recognised as the name of a command 😞", color="red")
+    print(msg1, msg2, sep=" ")
+
+
 def path_doesnt_exist_message(path: str) -> None:
     logger.warning('Path "%s" doesn\'t exist', path)
 

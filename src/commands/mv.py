@@ -15,6 +15,7 @@ from src.errors import (
 
 
 class Mv:
+    "'mv' command to read file contents"
 
     def __init__(self) -> None:
         parser = ArgumentParser(
@@ -31,6 +32,12 @@ class Mv:
         self.parser = parser
 
     def execute(self, cwd: str | None, _args: list[str]) -> None:
+        """
+        Execute 'mv' command from given directory with given args
+        Args:
+            cwd (str): directory to execute from
+            _args (list[str]): args for 'mv' command
+        """
         try:
             args, unknown_args = self.parser.parse_known_args(args=_args)
         except ArgumentError as e:
@@ -41,14 +48,14 @@ class Mv:
         if len(unknown_args) > 0:
             unknown_arguments_message(unknown_args=unknown_args)
 
-        if cwd:
+        if cwd:  # if cwd not None, command executed from Terminal3000 class
             srcpath = str(
                 Path(args.src if isabs(args.src) else f"{cwd}\{args.src}").resolve()
             )
             dstpath = str(
                 Path(args.dst if isabs(args.dst) else f"{cwd}\{args.dst}").resolve()
             )
-        else:
+        else:  # if cwd is None, command executed from Undo class, given path already absolute
             srcpath = str(Path(args.src))
             dstpath = str(Path(args.dst))
         if not access(path=srcpath, mode=F_OK):
@@ -62,12 +69,15 @@ class Mv:
         except PermissionError:
             permission_denied_message(srcpath, dstpath)
         except PathAlreadyExistsError:
+            #  Need cause of move() command can't move to directory already existing
+            #  Check is paths lead to the same file
             real_src_path = srcpath[: srcpath.rindex("\\")]
             real_dst_path = dstpath.rstrip("\\")
             if real_src_path == real_dst_path:
                 src_and_dst_are_the_same_message(path=srcpath)
                 return
 
+            #  If not, copy all files from src dir, after that delete src dir
             dstpath = f'{dstpath}\{srcpath.split('\\')[-1]}'
             copytree(
                 src=srcpath,

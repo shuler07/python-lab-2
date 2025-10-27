@@ -1,7 +1,7 @@
-from os import access, F_OK, mkdir
+from os import access, F_OK, mkdir, remove
 from os.path import isabs, isdir, isfile
 from pathlib import Path
-from shutil import move, rmtree
+from shutil import move, rmtree, Error
 from argparse import ArgumentParser, ArgumentError
 
 from src.commands.history import cmd_history
@@ -16,6 +16,7 @@ from src.errors import (
 
 
 class Rm:
+    "'rm' command to read file contents"
 
     def __init__(self) -> None:
         parser = ArgumentParser(
@@ -31,6 +32,12 @@ class Rm:
         self.parser = parser
 
     def execute(self, cwd: str | None, _args: list[str]) -> None:
+        """
+        Execute 'rm' command from given directory with given args
+        Args:
+            cwd (str): directory to execute from
+            _args (list[str]): args for 'rm' command
+        """
         try:
             args, unknown_args = self.parser.parse_known_args(args=_args)
         except ArgumentError as e:
@@ -47,10 +54,13 @@ class Rm:
         if not access(path=path, mode=F_OK):
             path_doesnt_exist_message(path=path)
             return
+
+        #  Decline command if it tries to delete root or parent directory
         if cwd and str(path) in cwd:
             attempt_to_remove_parent_path_message(path=path)
             return
 
+        #  Create .trash if it didn't exists
         if not access(path="./.trash", mode=F_OK):
             mkdir("./.trash")
 
@@ -59,7 +69,12 @@ class Rm:
                 path_leads_to_file_instead_of_dir_message(path=path)
                 return
 
-            move(src=path, dst="./.trash")
+            try:
+                move(src=path, dst="./.trash")
+            except Error:
+                #  Replace old file in .trash with new by deleting previous
+                rmtree(f'./.trash/{path.split('\\')[-1]}')
+                move(src=path, dst="./.trash")
             if cwd:
                 cmd_history.write(cmd=f"rm {path} --recursive")
         else:
@@ -67,13 +82,20 @@ class Rm:
                 path_leads_to_dir_instead_of_file_message(path=path)
                 return
 
-            move(src=path, dst="./.trash")
+            try:
+                move(src=path, dst="./.trash")
+            except Error:
+                #  Replace old file in .trash with new by deleting previous
+                remove(f'./.trash/{path.split('\\')[-1]}')
+                move(src=path, dst="./.trash")
             if cwd:
                 cmd_history.write(cmd=f"rm {path}")
 
-    def clear_trash(self) -> None:
-        if access(path="./.trash", mode=F_OK):
-            rmtree("./.trash")
+
+def clear_trash() -> None:
+    "Delete .trash directory with all includes"
+    if access(path="./.trash", mode=F_OK):
+        rmtree("./.trash")
 
 
 cmd_rm = Rm()

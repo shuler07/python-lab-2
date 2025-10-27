@@ -1,17 +1,16 @@
 from pathlib import Path
 
-
-ansi_color_codes = {
-    "black": "30m",
-    "red": "31m",
-    "green": "32m",
-    "yellow": "33m",
-    "blue": "34m",
-    "magenta": "35m",
-    "lightblue": "36m",
-    "white": "37m",
-}
+from src.constants import ANSI_COLOR_CODES
 
 
 def colorize(text: str | Path, color: str, bold: bool = False) -> str:
-    return f"\033[{1 if bold else 0};{ansi_color_codes[color]}{text}\033[0m"
+    """
+    Colorize given string
+    Args:
+        text (str | Path): string to be colorized
+        color (str): string color (black, red, green, yellow, blue, magenta, lightblue, white)
+        bold (bool): is string bold
+    Returns:
+        str: colorized string via ansi color codes
+    """
+    return f"\033[{1 if bold else 0};{ANSI_COLOR_CODES[color]}{text}\033[0m"
