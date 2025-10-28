@@ -1,4 +1,34 @@
-# Lab #2
+# (Rus) Лабораторная работа #2
+Невероятно функциональный, красивый и незаменимый Terminal3000 — это терминал нового поколения, рядом с которым и рядом не стояли PowerShell и Bash.
+
+## Реализованный функционал
+1. ls [-h, --help] [-l, --list] [path] — Показать файлы и папки в текущей или указанной папке
+2. cd [-h, --help] path — Сменить текущий каталог
+3. cat [-h, --help] path — Прочитать содержимое файла
+4. cp [-h, --help] [-r, --recursive] src dst — Копировать файл или папку из исходной папки в целевую
+5. mv [-h, --help] src dst — Переместить файл или папку из исходной папки в целевую, переименовать файл или папку
+6. rm [-h, --help] [-r, --recursive] path — Удалить файл или папку
+7. zip [-h, --help] path name — Создать zip-архив из папки
+8. unzip [-h, --help] path name — Распаковать архив в папку
+9. tar [-h, --help] path name — Создать tar-архив из папка
+10. untar [-h, --help] oath — распаковать архив в папку
+11. grep [-h, --help] [-r, --recursive] [-i, --insensetive] path pattern — найти файлы с текстом, удовлетворяющим заданному шаблону
+12. history [-h, --help] [-c, --count COUNT] — показать последние выполненные команды
+13. undo — отменить последнюю выполненную команду
+14. help — показать справку
+15. cls, clear — очистить вывод терминала
+16. quit — выйти из терминала
+
+Также:
+- Ведение журнала в t3000.log
+- Временный каталог .trash для удалённых файлов и папок, который очищается после выхода из терминала
+- Файл .history с данными о последних сеансах и выполненных командах
+
+## Как использовать
+1. Запустите терминал (python -m src.main)
+2. Наслаждайтесь!
+
+# (Eng) Lab #2
 The incredibly functional awesome beautiful indispensable Terminal3000 is a next-generation terminal that leaves nothing to be desired, even compared to PowerShell and Bash.
 
 ## Implemented commands functionality
@@ -24,12 +54,6 @@ Also:
 - Temporary .trash directory for removed files and folders, that clears after quitting terminal
 - .history file with data about last sessions and executed commands
 
-## How to user
+## How to use
 1. Launch terminal (python -m src.main)
 2. Enjoy it!
-   Например: 2 + $$3 - ~~2 некорректное выражение
-3. Не допускается использование сокращенной записи умножения без знака.
-   Например: 2 * (3 * 2) корректное выражение
-             2(3 * 2) некорректное выражение
-4. Допускается возведение степени в степень без использования скобок.
-   Например: 2 ** ~2 ** ~2 корректное выражение (трактуется как 2 ** (~2 ** (~2)))
