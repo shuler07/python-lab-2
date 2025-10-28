@@ -73,14 +73,14 @@ class Undo:
                         ind = args[-2].rfind("\\") + 1
                         _args = [
                             f"./.trash/{args[-2][ind:]}",
-                            args[-2][ind:],
+                            args[-2][:ind],
                         ]
                     else:
                         #  Getting correct name of file in .trash
                         ind = args[-1].rfind("\\") + 1
                         _args = [
                             f"./.trash/{args[-1][ind:]}",
-                            args[-1][ind:],
+                            args[-1][:ind],
                         ]
 
                     cmd_mv.execute(cwd=None, _args=_args)

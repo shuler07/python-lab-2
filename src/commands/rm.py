@@ -5,6 +5,7 @@ from shutil import move, rmtree, Error
 from argparse import ArgumentParser, ArgumentError
 
 from src.commands.history import cmd_history
+from src.logger import logger
 from src.errors import (
     path_doesnt_exist_message,
     missing_required_arguments_message,
@@ -13,6 +14,7 @@ from src.errors import (
     path_leads_to_file_instead_of_dir_message,
     attempt_to_remove_parent_path_message,
 )
+from src.colortext import colorize
 
 
 class Rm:
@@ -69,6 +71,11 @@ class Rm:
                 path_leads_to_file_instead_of_dir_message(path=path)
                 return
 
+            #  Confirmation
+            if not self.get_confirmation(path=path):
+                logger.info("Action cancelled")
+                return
+
             try:
                 move(src=path, dst="./.trash")
             except Error:
@@ -90,6 +97,20 @@ class Rm:
                 move(src=path, dst="./.trash")
             if cwd:
                 cmd_history.write(cmd=f"rm {path}")
+
+    def get_confirmation(self, path: str) -> bool:
+        """
+        Get confirmation from user to delete selected folder
+        Args:
+            path (str): path to folder
+        Returns:
+            bool: is deletion confirmed
+        """
+        msg1 = colorize(text="(y / n) Confirm folder deletion -", color="yellow")
+        msg2 = colorize(text=path, color="yellow", bold=True)
+        choice = input(f"{msg1} {msg2}\n")
+
+        return choice == "y"
 
 
 def clear_trash() -> None:
