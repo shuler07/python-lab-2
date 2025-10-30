@@ -24,11 +24,15 @@ from src.colortext import colorize
 class Terminal3000:
     """
     Very powerful terminal with bunch of useful commands
+    Args:
+        cwd (str): current working directory
+        reload (bool): do not exit from terminal after command executed
     """
 
     def __init__(self, cwd: str = getcwd(), reload: bool = True) -> None:
         self.cwd = cwd
         self.reload = reload
+
         self.commands: dict[str, Any] = {
             "ls": cmd_ls,
             "cd": cmd_cd,
@@ -45,21 +49,22 @@ class Terminal3000:
             "undo": cmd_undo,
         }
 
-        descriptions = [
-            f"\033[1;37m{cmd}\033[0m - {self.commands[cmd].parser.description}"
-            for cmd in self.commands.keys()
-        ]
+        descriptions = []
+        for cmd in self.commands.keys():
+            desc = f"{colorize(text=cmd, color='white', bold=True)} - {self.commands[cmd].parser.description}"
+            descriptions.append(desc)
+
         self.help_message = f"""
-\033[1;35mThis is Terminal3000 - very powerful tool for you 💪\033[0m
-\033[1;36mAvailable commands:\033[0m
+{colorize(text='This is Terminal3000 - very powerful tool for you 💪', color='magenta', bold=True)}
+{colorize(text='Available commands:', color='lightblue', bold=True)}
     {'\n    '.join(descriptions)}
-    \033[1;37mh, help\033[0m - Show this help message
-    \033[1;37mcls, clear\033[0m - Clean screen
-    \033[1;37mq, quit\033[0m - Quit Terminal3000 :(
+    {colorize(text='h, help', color='white', bold=True)} - Show this help message
+    {colorize(text='cls, clear', color='white', bold=True)} - Clean screen
+    {colorize(text='q, quit', color='white', bold=True)} - Quit Terminal3000 :(
 """
 
     def start(self) -> None:
-        "Start terminal session"
+        "Start new terminal session"
         sys("cls")
         self.wait()
 
