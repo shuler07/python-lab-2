@@ -1,4 +1,4 @@
-from os import access, F_OK
+from pathlib import Path
 from argparse import ArgumentParser
 from datetime import datetime
 
@@ -34,14 +34,12 @@ class History:
         # Default count of commands to be printed
         count = int(args.count) if args.count else 5
 
-        if not access(path="./.history", mode=F_OK):
+        if not Path("./.history").exists():
             history_file_not_found_message()
             return
 
-        for line in open(file="./.history").readlines():
-            if count > 0:
-                print(line.rstrip())  # Need cause of empty lines between prints
-                count -= 1
+        for line in open(file="./.history").readlines()[-count:]:
+            print(line.rstrip())  # Need cause of empty lines between prints
         self.write(cmd=f"history --count {args.count if args.count else 5}")
 
     def write(self, cmd: str) -> None:
@@ -50,7 +48,7 @@ class History:
         Args:
             cmd (str): command to be written
         """
-        if access(path="./.history", mode=F_OK):
+        if Path("./.history").exists():
             with open(file="./.history", mode="a") as f:  # Append to existing file
                 if not self.initiated:
                     date = datetime.strftime(datetime.now(), format=DATETIME_FORMAT)

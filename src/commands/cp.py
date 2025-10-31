@@ -1,5 +1,4 @@
 from shutil import copy, copytree, SameFileError, Error
-from os import access, F_OK
 from os.path import isabs, isfile, isdir
 from pathlib import Path
 from argparse import ArgumentParser, ArgumentError
@@ -53,12 +52,12 @@ class Cp:
             unknown_arguments_message(unknown_args=unknown_args)
 
         srcpath = str(
-            Path(args.src if isabs(args.src) else f"{cwd}\{args.src}").resolve()
+            Path(args.src if isabs(args.src) else f"{cwd}/{args.src}").resolve()
         )
         dstpath = str(
-            Path(args.dst if isabs(args.dst) else f"{cwd}\{args.dst}").resolve()
+            Path(args.dst if isabs(args.dst) else f"{cwd}/{args.dst}").resolve()
         )
-        if not access(path=srcpath, mode=F_OK):
+        if not Path(srcpath).exists():
             path_doesnt_exist_message(path=srcpath)
             return
 
@@ -67,9 +66,11 @@ class Cp:
                 path_leads_to_file_instead_of_dir_message(path=srcpath)
                 return
 
+            foldername = srcpath.split("\\")[-1]
+            dstpath = f"{dstpath}/{foldername}"
             try:
                 cmd_history.write(
-                    cmd=f"cp {srcpath} {copytree(src=srcpath, dst=f'{dstpath}\{srcpath.split('\\')[-1]}', dirs_exist_ok=True)} --recursive"
+                    cmd=f"cp {srcpath} {copytree(src=srcpath, dst=dstpath, dirs_exist_ok=True)} --recursive"
                 )
             except PermissionError:
                 permission_denied_message(srcpath, dstpath)

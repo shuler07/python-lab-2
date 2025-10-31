@@ -1,5 +1,5 @@
-from os import access, F_OK
-from os.path import isabs
+from os import remove
+from os.path import isabs, isdir
 from pathlib import Path
 from shutil import move, Error as PathAlreadyExistsError, copytree, rmtree
 from argparse import ArgumentParser, ArgumentError
@@ -48,17 +48,19 @@ class Mv:
         if len(unknown_args) > 0:
             unknown_arguments_message(unknown_args=unknown_args)
 
-        if cwd:  # if cwd not None, command executed from Terminal3000 class
+        # if cwd is not None, command executed from Terminal3000 class
+        # if cwd is None, command executed from Undo class, given path already absolute
+        if cwd:
             srcpath = str(
-                Path(args.src if isabs(args.src) else f"{cwd}\{args.src}").resolve()
+                Path(args.src if isabs(args.src) else f"{cwd}/{args.src}").resolve()
             )
             dstpath = str(
-                Path(args.dst if isabs(args.dst) else f"{cwd}\{args.dst}").resolve()
+                Path(args.dst if isabs(args.dst) else f"{cwd}/{args.dst}").resolve()
             )
-        else:  # if cwd is None, command executed from Undo class, given path already absolute
+        else:
             srcpath = str(Path(args.src))
             dstpath = str(Path(args.dst))
-        if not access(path=srcpath, mode=F_OK):
+        if not Path(srcpath).exists():
             path_doesnt_exist_message(path=srcpath)
             return
 
@@ -69,22 +71,28 @@ class Mv:
         except PermissionError:
             permission_denied_message(srcpath, dstpath)
         except PathAlreadyExistsError:
-            #  Need cause of move() command can't move to directory already existing
-            #  Check is paths lead to the same file
+            # Check is paths lead to the same file
             real_src_path = srcpath[: srcpath.rindex("\\")]
             real_dst_path = dstpath.rstrip("\\")
             if real_src_path == real_dst_path:
                 src_and_dst_are_the_same_message(path=srcpath)
                 return
 
-            #  If not, copy all files from src dir, after that delete src dir
-            dstpath = f'{dstpath}\{srcpath.split('\\')[-1]}'
-            copytree(
-                src=srcpath,
-                dst=dstpath,
-                dirs_exist_ok=True,
-            )
-            rmtree(path=srcpath)
+            filename = srcpath.split("\\")[-1]
+            dstpath = f"{dstpath}/{filename}"
+            if isdir(dstpath):
+                # Need cause of move() command can't move to directory already existing
+                copytree(
+                    src=srcpath,
+                    dst=dstpath,
+                    dirs_exist_ok=True,
+                )
+                rmtree(path=srcpath)
+            else:
+                # In selected dir this file already exists, replacing it
+                remove(path=dstpath)
+                move(src=srcpath, dst=dstpath)
+
             if cwd:
                 cmd_history.write(cmd=f"mv {srcpath} {dstpath}")
 

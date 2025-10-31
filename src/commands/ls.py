@@ -1,9 +1,5 @@
-from os import listdir, access, F_OK, R_OK, W_OK
-from os.path import isfile, isabs, getsize, getctime, getmtime
-from pathlib import Path
 from datetime import datetime as dt
 from argparse import ArgumentParser
-
 from src.commands.history import cmd_history
 from src.errors import (
     path_doesnt_exist_message,
@@ -44,6 +40,9 @@ class Ls:
             cwd (str): directory to execute from
             _args (list[str]): args for 'ls' command
         """
+        # Imports
+        from src import listdir, access, R_OK, W_OK, isfile, isabs, getsize, getctime, getmtime, Path
+
         args, unknown_args = self.parser.parse_known_args(args=_args)
         if len(unknown_args) > 0:
             unknown_arguments_message(unknown_args=unknown_args)
@@ -52,13 +51,13 @@ class Ls:
         args.path = args.path if args.path else "."
 
         path = str(
-            Path(args.path if isabs(args.path) else f"{cwd}\{args.path}").resolve()
+            Path(args.path if isabs(args.path) else f"{cwd}/{args.path}").resolve()
         )
+        if not Path(path).exists():
+            path_doesnt_exist_message(path=path)
+            return
         if isfile(path):
             path_leads_to_file_instead_of_dir_message(path=path)
-            return
-        if not access(path=path, mode=F_OK):
-            path_doesnt_exist_message(path=path)
             return
 
         if args.list:
@@ -77,26 +76,34 @@ class Ls:
                 return f"{x: <{max_len_elem}}"
 
             def el_size(x: str) -> str:
-                return f"{getsize(f'{path}\{x}'): <{LS_FILE_SIZE_COLUMN_WIDTH}}"
+                return f"{getsize(f'{path}/{x}'): <{LS_FILE_SIZE_COLUMN_WIDTH}}"
 
             def el_created(x: str) -> str:
-                return f"{str(dt.fromtimestamp(getctime(f'{path}\{x}')).strftime(DATETIME_FORMAT)): <{LS_DATETIME_COLUMN_WIDTH}}"
+                return f"{str(dt.fromtimestamp(getctime(f'{path}/{x}')).strftime(DATETIME_FORMAT)): <{LS_DATETIME_COLUMN_WIDTH}}"
 
             def el_modified(x: str) -> str:
-                return f"{str(dt.fromtimestamp(getmtime(f'{path}\{x}')).strftime(DATETIME_FORMAT)): <{LS_DATETIME_COLUMN_WIDTH}}"
+                return f"{str(dt.fromtimestamp(getmtime(f'{path}/{x}')).strftime(DATETIME_FORMAT)): <{LS_DATETIME_COLUMN_WIDTH}}"
 
             def el_access(x: str) -> str:
                 perms = []
-                if access(f"{path}\{x}", R_OK):
+                if access(f"{path}/{x}", R_OK):
                     perms.append("Read")
-                if access(f"{path}\{x}", W_OK):
+                if access(f"{path}/{x}", W_OK):
                     perms.append("Write")
                 return f"{', '.join(perms): <{LS_PERMS_COLUMN_WIDTH}}"
 
             #  Files and dirs with its data
             for el in listdir(path=path):
                 print(
-                    f"{el_name(el)}  {el_size(el)}  {el_created(el)}  {el_modified(el)}  {el_access(el)}"
+                    "  ".join(
+                        [
+                            el_name(el),
+                            el_size(el),
+                            el_created(el),
+                            el_modified(el),
+                            el_access(el),
+                        ]
+                    )
                 )
 
             cmd_history.write(cmd=f"ls {path} --list")

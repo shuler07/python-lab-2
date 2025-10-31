@@ -1,4 +1,4 @@
-from os import access, F_OK, walk
+from os import walk
 from os.path import isabs, isfile, join
 from pathlib import Path
 from tarfile import TarFile
@@ -23,7 +23,7 @@ class Tar:
             exit_on_error=False,
         )
         parser.add_argument("path", help="Path to folder to tar")
-        parser.add_argument("name", help="Tar archive name")
+        parser.add_argument("name", help="Tar archive name", nargs="?")
         self.parser = parser
 
     def execute(self, cwd: str, _args: list[str]) -> None:
@@ -44,19 +44,22 @@ class Tar:
             unknown_arguments_message(unknown_args=unknown_args)
 
         path = str(
-            Path(args.path if isabs(args.path) else f"{cwd}\{args.path}").resolve()
+            Path(args.path if isabs(args.path) else f"{cwd}/{args.path}").resolve()
         )
-        if not access(path=path, mode=F_OK):
+        if not Path(path).exists():
             path_doesnt_exist_message(path=path)
             return
-
         if isfile(path):
             path_leads_to_file_instead_of_dir_message(path=path)
             return
 
-        #  Create valid archive name and correct directory to export where
-        tarname = args.name if args.name.endswith(".tar") else f"{args.name}.tar"
-        tarpath = f"{cwd}\{tarname}"
+        # Make valid name of archive
+        tarname = args.name if args.name else f'{path.split('\\')[-1]}.tar'
+        if not tarname.endswith(".tar"):
+            tarname += ".tar"
+
+        # Make valid path
+        tarpath = f"{cwd}/{tarname}"
 
         with TarFile(name=tarpath, mode="w") as zipw:
             ind_real_root_begin = None

@@ -1,8 +1,4 @@
-from os import access, F_OK
-from os.path import isdir, isabs
-from pathlib import Path
 from argparse import ArgumentParser, ArgumentError
-
 from src.commands.history import cmd_history
 from src.errors import (
     path_doesnt_exist_message,
@@ -31,6 +27,9 @@ class Cat:
             cwd (str): directory to execute from
             _args (list[str]): args for 'cat' command
         """
+        # Imports
+        from src import isdir, isabs, Path
+
         try:
             args, unknown_args = self.parser.parse_known_args(args=_args)
         except ArgumentError as e:
@@ -42,9 +41,9 @@ class Cat:
             unknown_arguments_message(unknown_args=unknown_args)
 
         path = str(
-            Path(args.path if isabs(args.path) else f"{cwd}\{args.path}").resolve()
+            Path(args.path if isabs(args.path) else f"{cwd}/{args.path}").resolve()
         )
-        if not access(path=path, mode=F_OK):
+        if not Path(path).exists():
             path_doesnt_exist_message(path=path)
             return
 

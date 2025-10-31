@@ -1,4 +1,4 @@
-from os import access, F_OK, walk
+from os import walk
 from os.path import isabs, isfile, join
 from pathlib import Path
 from zipfile import ZipFile
@@ -23,7 +23,7 @@ class Zip:
             exit_on_error=False,
         )
         parser.add_argument("path", help="Path to folder to zip")
-        parser.add_argument("name", help="Zip archive name")
+        parser.add_argument("name", help="Zip archive name", nargs="?")
         self.parser = parser
 
     def execute(self, cwd: str, _args: list[str]) -> None:
@@ -44,19 +44,22 @@ class Zip:
             unknown_arguments_message(unknown_args=unknown_args)
 
         path = str(
-            Path(args.path if isabs(args.path) else f"{cwd}\{args.path}").resolve()
+            Path(args.path if isabs(args.path) else f"{cwd}/{args.path}").resolve()
         )
-        if not access(path=path, mode=F_OK):
+        if not Path(path).exists():
             path_doesnt_exist_message(path=path)
             return
-
         if isfile(path):
             path_leads_to_file_instead_of_dir_message(path=path)
             return
 
-        #  Create valid archive name and correct directory to export where
-        zipname = args.name if args.name.endswith(".zip") else f"{args.name}.zip"
-        zippath = f"{cwd}\{zipname}"
+        # Make valid name of archive
+        zipname = args.name if args.name else f'{path.split('\\')[-1]}.zip'
+        if not zipname.endswith(".zip"):
+            zipname += ".zip"
+
+        # Make valid path
+        zippath = f"{cwd}/{zipname}"
 
         with ZipFile(file=zippath, mode="w") as zipw:
             ind_real_root_begin = None

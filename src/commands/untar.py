@@ -1,4 +1,3 @@
-from os import access, F_OK
 from os.path import isabs
 from pathlib import Path
 from tarfile import TarFile, is_tarfile
@@ -41,21 +40,19 @@ class Untar:
             unknown_arguments_message(unknown_args=unknown_args)
 
         path = str(
-            Path(args.path if isabs(args.path) else f"{cwd}\{args.path}").resolve()
+            Path(args.path if isabs(args.path) else f"{cwd}/{args.path}").resolve()
         )
-
-        #  Create valid archive path
-        tarpath = path if path.endswith(".tar") else f"{path}.tar"
-
-        if not access(path=tarpath, mode=F_OK):
-            path_doesnt_exist_message(path=tarpath)
+        if not path.endswith(".tar"):
+            path += "tar"
+        if not Path(path).exists():
+            path_doesnt_exist_message(path=path)
             return
 
-        if not is_tarfile(name=tarpath):
-            path_doesnt_lead_to_tarfile_message(path=tarpath)
+        if not is_tarfile(name=path):
+            path_doesnt_lead_to_tarfile_message(path=path)
             return
 
-        with TarFile(name=tarpath, mode="r") as zipr:
+        with TarFile(name=path, mode="r") as zipr:
             zipr.extractall(filter="fully_trusted")
         cmd_history.write(cmd=f"untar {path}")
 
