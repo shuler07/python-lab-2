@@ -1,9 +1,5 @@
-from os import remove
-from os.path import isabs, isdir
-from pathlib import Path
-from shutil import move, Error as PathAlreadyExistsError, copytree, rmtree
+from shutil import Error as PathAlreadyExistsError
 from argparse import ArgumentParser, ArgumentError
-
 from src.commands.history import cmd_history
 from src.errors import (
     path_doesnt_exist_message,
@@ -38,6 +34,8 @@ class Mv:
             cwd (str): directory to execute from
             _args (list[str]): args for 'mv' command
         """
+        from src import remove, isabs, isdir, Path, move, copytree, rmtree
+
         try:
             args, unknown_args = self.parser.parse_known_args(args=_args)
         except ArgumentError as e:

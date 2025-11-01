@@ -10,7 +10,7 @@ class Logger:
         format = "[%(asctime)s] %(levelname)s: %(message)s"
         logging.basicConfig(
             level=logging.INFO,
-            filename="t3000.log",
+            filename="shell.log",
             datefmt=DATETIME_FORMAT,
             format=format,
         )

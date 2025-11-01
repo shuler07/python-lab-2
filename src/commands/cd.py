@@ -27,7 +27,6 @@ class Cd:
         Returns:
             str: new current working directory
         """
-        # Imports
         from src import isfile, isabs, Path
 
         try:

@@ -1,8 +1,5 @@
-from shutil import copy, copytree, SameFileError, Error
-from os.path import isabs, isfile, isdir
-from pathlib import Path
+from shutil import SameFileError, Error as PathAlreadyExistsError
 from argparse import ArgumentParser, ArgumentError
-
 from src.commands.history import cmd_history
 from src.errors import (
     path_doesnt_exist_message,
@@ -41,6 +38,8 @@ class Cp:
             cwd (str): directory to execute from
             _args (list[str]): args for 'cp' command
         """
+        from src import isabs, isdir, isfile, copy, copytree, Path
+
         try:
             args, unknown_args = self.parser.parse_known_args(args=_args)
         except ArgumentError as e:
@@ -74,7 +73,7 @@ class Cp:
                 )
             except PermissionError:
                 permission_denied_message(srcpath, dstpath)
-            except Error:
+            except PathAlreadyExistsError:
                 src_and_dst_are_the_same_message(path=srcpath)
         else:
             if isdir(srcpath):

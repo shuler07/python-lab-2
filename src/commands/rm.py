@@ -1,9 +1,5 @@
-from os import mkdir, remove
-from os.path import isabs, isdir, isfile
-from pathlib import Path
-from shutil import move, rmtree, Error
+from shutil import Error as PathAlreadyExistsError
 from argparse import ArgumentParser, ArgumentError
-
 from src.commands.history import cmd_history
 from src.logger import logger
 from src.errors import (
@@ -40,6 +36,8 @@ class Rm:
             cwd (str): directory to execute from
             _args (list[str]): args for 'rm' command
         """
+        from src import mkdir, remove, isabs, isdir, isfile, Path, move, rmtree
+
         try:
             args, unknown_args = self.parser.parse_known_args(args=_args)
         except ArgumentError as e:
@@ -78,7 +76,7 @@ class Rm:
 
             try:
                 move(src=path, dst="./.trash")
-            except Error:
+            except PathAlreadyExistsError:
                 filename = path.split("\\")[-1]
                 # Replace old file in .trash with new by deleting previous
                 rmtree(f"./.trash/{filename}")
@@ -92,7 +90,7 @@ class Rm:
 
             try:
                 move(src=path, dst="./.trash")
-            except Error:
+            except PathAlreadyExistsError:
                 filename = path.split("\\")[-1]
                 # Replace old file in .trash with new by deleting previous
                 remove(f"./.trash/{filename}")
@@ -117,6 +115,9 @@ class Rm:
 
 def clear_trash() -> None:
     "Delete .trash directory with all includes"
+    # Imports
+    from src import Path, rmtree
+
     if Path("./.trash").exists():
         rmtree("./.trash")
 

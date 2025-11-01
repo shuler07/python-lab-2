@@ -1,9 +1,5 @@
-from os import listdir, walk
-from os.path import isabs, isfile, join
-from pathlib import Path
 from argparse import ArgumentParser, ArgumentError
 import re
-
 from src.commands.history import cmd_history
 from src.errors import (
     path_doesnt_exist_message,
@@ -44,6 +40,8 @@ class Grep:
             cwd (str): directory to execute from
             _args (list[str]): args for 'grep' command
         """
+        from src import listdir, walk, isabs, isfile, join, Path
+
         try:
             args, unknown_args = self.parser.parse_known_args(args=_args)
         except ArgumentError as e:

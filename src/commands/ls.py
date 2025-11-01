@@ -40,7 +40,6 @@ class Ls:
             cwd (str): directory to execute from
             _args (list[str]): args for 'ls' command
         """
-        # Imports
         from src import listdir, access, R_OK, W_OK, isfile, isabs, getsize, getctime, getmtime, Path
 
         args, unknown_args = self.parser.parse_known_args(args=_args)

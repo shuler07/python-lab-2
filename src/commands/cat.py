@@ -27,7 +27,6 @@ class Cat:
             cwd (str): directory to execute from
             _args (list[str]): args for 'cat' command
         """
-        # Imports
         from src import isdir, isabs, Path
 
         try:

@@ -1,9 +1,5 @@
-from os import walk
-from os.path import isabs, isfile, join
-from pathlib import Path
 from tarfile import TarFile
 from argparse import ArgumentParser, ArgumentError
-
 from src.commands.history import cmd_history
 from src.errors import (
     path_doesnt_exist_message,
@@ -33,6 +29,8 @@ class Tar:
             cwd (str): directory to execute from
             _args (list[str]): args for 'tar' command
         """
+        from src import walk, isabs, isfile, join, Path
+
         try:
             args, unknown_args = self.parser.parse_known_args(args=_args)
         except ArgumentError as e:

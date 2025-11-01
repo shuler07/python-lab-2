@@ -1,7 +1,5 @@
-from pathlib import Path
 from argparse import ArgumentParser
 from datetime import datetime
-
 from src.errors import unknown_arguments_message, history_file_not_found_message
 from src.constants import DATETIME_FORMAT
 
@@ -27,6 +25,8 @@ class History:
             cwd (str): directory to execute from
             _args (list[str]): args for 'history' command
         """
+        from src import Path
+
         args, unknown_args = self.parser.parse_known_args(args=_args)
         if len(unknown_args) > 0:
             unknown_arguments_message(unknown_args=unknown_args)
@@ -48,6 +48,8 @@ class History:
         Args:
             cmd (str): command to be written
         """
+        from src import Path
+
         if Path("./.history").exists():
             with open(file="./.history", mode="a") as f:  # Append to existing file
                 if not self.initiated:

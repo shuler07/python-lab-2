@@ -1,8 +1,5 @@
-from os.path import isabs
-from pathlib import Path
 from tarfile import TarFile, is_tarfile
 from argparse import ArgumentParser, ArgumentError
-
 from src.commands.history import cmd_history
 from src.errors import (
     path_doesnt_exist_message,
@@ -29,6 +26,8 @@ class Untar:
             cwd (str): directory to execute from
             _args (list[str]): args for 'untar' command
         """
+        from src import isabs, Path
+
         try:
             args, unknown_args = self.parser.parse_known_args(args=_args)
         except ArgumentError as e:

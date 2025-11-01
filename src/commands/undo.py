@@ -1,10 +1,8 @@
-from pathlib import Path
 from argparse import ArgumentParser
-
 from src.commands.mv import cmd_mv
 from src.commands.rm import cmd_rm
 from src.commands.history import cmd_history
-from src.errors import history_file_not_found_message, command_to_undo_not_found_message
+from src.errors import history_file_not_found_message
 
 
 class Undo:
@@ -25,6 +23,9 @@ class Undo:
             cwd (str): directory to execute from
             _args (list[str]): args for 'undo' command
         """
+        from src import Path
+        from src.errors import command_to_undo_not_found_message
+
         if not Path("./.history").exists():
             history_file_not_found_message()
             return
@@ -41,8 +42,7 @@ class Undo:
         for cmd in commands:
             # Check is commands in current session ended up
             if cmd.startswith("New session"):
-                command_to_undo_not_found_message()
-                return
+                break
 
             _, command, *args = cmd.split()
 
