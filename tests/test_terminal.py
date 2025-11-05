@@ -1,218 +1,691 @@
-from os import access, F_OK
-from pathlib import Path
-
+import pytest
+from unittest.mock import Mock
+from pytest_mock import MockerFixture
 from src.terminal import Terminal3000
-from src.constants import TESTS_DIR
 
-terminal = Terminal3000(cwd=TESTS_DIR, reload=False)
+from shutil import Error as PathAlreadyExistsError
 
 
-class TestTerminal3000:
+@pytest.fixture
+def utils(mocker: MockerFixture):
+    yield {
+        "terminal": Terminal3000(cwd="cwd", reload=False),
+        "isfile": mocker.patch("src.isfile"),
+        "isdir": mocker.patch("src.isdir"),
+        "listdir": mocker.patch("src.listdir"),
+        "getsize": mocker.patch("src.getsize"),
+        "getctime": mocker.patch("src.getctime"),
+        "getmtime": mocker.patch("src.getmtime"),
+        "access": mocker.patch("src.access"),
+        "copy": mocker.patch("src.copy"),
+        "copytree": mocker.patch("src.copytree"),
+        "move": mocker.patch("src.move"),
+        "remove": mocker.patch("src.remove"),
+        "rmtree": mocker.patch("src.rmtree"),
+        "walk": mocker.patch("src.walk"),
+    }
 
-    # ls
-    def test_ls_1(self, capsys):
-        terminal.process("ls")
 
-        captured = capsys.readouterr()
-        expected = "somefile1.txt\nsomefile2.txt\nsubfolder_for_tests\n"
-        assert captured.out == expected
+@pytest.fixture
+def path(mocker: MockerFixture):
+    mock = mocker.patch("src.Path")
+    mocked_path = Mock()
+    mocked_path.resolve.return_value = "path\\to\\somewhere"
+    mocked_path.exists.return_value = True
+    mock.return_value = mocked_path
+    yield mock
 
-    def test_ls_2(self, capsys):
-        terminal.process("ls ././..\\folder_for_tests/subfolder_for_tests\\./")
 
-        captured = capsys.readouterr()
-        expected = "somefile3.txt\n"
-        assert captured.out == expected
+@pytest.fixture
+def fake_path(mocker: MockerFixture):
+    mock = mocker.patch("src.Path")
+    mocked_path = Mock()
+    mocked_path.resolve.return_value = "path\\to\\somewhere"
+    mocked_path.exists.return_value = False
+    mock.return_value = mocked_path
+    yield mock
 
-    def test_ls_3(self, capsys):
-        terminal.process("ls subfolder_for_tests -kklkkjgkklhjgkg")
 
-        captured = capsys.readouterr()
-        expected = "\033[0;33m🤔 Unknown args:\033[0m \033[1;33m-kklkkjgkklhjgkg\033[0m\nsomefile3.txt\n"
-        assert captured.out == expected
+class TestLs:
 
-    # cd
-    def test_cd_1(self):
-        terminal.process("cd .")
-        assert terminal.cwd == TESTS_DIR
+    def test_ls_fakepath(self, fake_path: Mock, utils: dict[str, Mock]):
+        utils["terminal"].process("ls fakepath")
 
-    def test_cd_2(self):
-        terminal.process("cd ../.\\.")
-        assert terminal.cwd == f"{Path().cwd()}\\tests"
+        fake_path.assert_called()
+        utils["isfile"].assert_not_called()
 
-    def test_cd_3(self):
-        terminal.process("cd folder_for_tests")
-        assert terminal.cwd == TESTS_DIR
+    def test_ls_filepath(self, path: Mock, utils: dict[str, Mock]):
+        utils["isfile"].return_value = True
 
-    def test_cd_4(self, capsys):
-        terminal.process("cd abcdef")
+        utils["terminal"].process("ls filepath")
 
-        captured = capsys.readouterr()
-        expected = f"\033[0;31m😞 Path\033[0m \033[1;31m{TESTS_DIR}\\abcdef\033[0m \033[0;31mdoesn't exist\033[0m\n"
-        assert captured.out == expected
+        path.assert_called()
+        utils["isfile"].assert_called_once()
+        utils["listdir"].assert_not_called()
 
-    # cat
-    def test_cat_1(self, capsys):
-        terminal.process("cat somefile1.txt")
+    def test_ls_dirpath(self, path: Mock, utils: dict[str, Mock]):
+        utils["isfile"].return_value = False
 
-        captured = capsys.readouterr()
-        expected = "text from somefile1\n"
-        assert captured.out == expected
+        utils["terminal"].process("ls ..")
 
-    def test_cat_2(self, capsys):
-        terminal.process("cat nonexistingfile.txt")
+        path.assert_called()
+        utils["isfile"].assert_called_once()
+        utils["listdir"].assert_called_once()
 
-        captured = capsys.readouterr()
-        expected = f"\033[0;31m😞 Path\033[0m \033[1;31m{TESTS_DIR}\\nonexistingfile.txt\033[0m \033[0;31mdoesn't exist\033[0m\n"
-        assert captured.out == expected
+    def test_ls_list_flag(self, path: Mock, utils: dict[str, Mock]):
+        utils["isfile"].return_value = False
+        utils["listdir"].return_value = ["file1", "file2"]
+        utils["getsize"].return_value = 20
+        utils["getctime"].return_value = 1609459200
+        utils["getmtime"].return_value = 1609459200
+        utils["access"].return_value = True
 
-    def test_cat_3(self, capsys):
-        terminal.process("cat subfolder_for_tests")
+        utils["terminal"].process("ls --list")
 
-        captured = capsys.readouterr()
-        expected = f"\033[0;31m😕 Directory path received instead of file path:\033[0m \033[1;31m{TESTS_DIR}\\subfolder_for_tests\033[0m\n"
-        assert captured.out == expected
+        path.assert_called()
+        utils["isfile"].assert_called_once()
+        utils["listdir"].assert_called()
 
-    # cp
-    def test_cp_1(self):
-        terminal.process("cp somefile1.txt subfolder_for_tests")
-        assert access(
-            path=f"{TESTS_DIR}\\subfolder_for_tests\\somefile1.txt",
-            mode=F_OK,
-        ) and access(path=f"{TESTS_DIR}\\somefile1.txt", mode=F_OK)
 
-    def test_cp_2(self, capsys):
-        terminal.process("cp subfolder_for_tests ..")
+class TestCd:
 
-        captured = capsys.readouterr()
-        expected = f"\033[0;31m😕 Directory path received instead of file path:\033[0m \033[1;31m{TESTS_DIR}\\subfolder_for_tests\033[0m\n"
-        assert captured.out == expected
+    def test_cd_fakepath(self, fake_path: Mock, utils: dict[str, Mock]):
+        utils["terminal"].process("cd fakepath")
 
-    def test_cp_3(self):
-        terminal.process("cp subfolder_for_tests .. --recursive")
-        assert access(
-            path=f"{TESTS_DIR}\\..\\subfolder_for_tests", mode=F_OK
-        ) and access(
-            path=f"{TESTS_DIR}\\subfolder_for_tests",
-            mode=F_OK,
+        fake_path.assert_called()
+        utils["isfile"].assert_not_called()
+
+    def test_cd_home_dir(self, path: Mock, utils: dict[str, Mock]):
+        utils["terminal"].process("cd ~")
+
+        path.assert_called()
+        utils["isfile"].assert_not_called()
+
+    def test_cd_file(self, path: Mock, utils: dict[str, Mock]):
+        utils["isfile"].return_value = True
+
+        utils["terminal"].process("cd filepath")
+
+        path.assert_called()
+        utils["isfile"].assert_called_once()
+
+    def test_cd_missing_path(self, path: Mock, utils: dict[str, Mock]):
+        utils["terminal"].process("cd")
+
+        path.assert_called()
+        utils["isfile"].assert_not_called()
+
+
+class TestCat:
+
+    def test_cat_fakepath(self, fake_path: Mock, utils: dict[str, Mock]):
+        utils["terminal"].process("cat fakepath")
+
+        fake_path.assert_called()
+        utils["isdir"].assert_not_called()
+
+    def test_cat_dir(self, path: Mock, utils: dict[str, Mock], mocker: MockerFixture):
+        utils["isdir"].return_value = True
+        mocked_open = mocker.patch("builtins.open")
+
+        utils["terminal"].process("cat dirpath")
+
+        path.assert_called()
+        utils["isdir"].assert_called_once()
+        mocked_open.assert_not_called()
+
+    def test_cat_success(
+        self, path: Mock, utils: dict[str, Mock], mocker: MockerFixture
+    ):
+        utils["isdir"].return_value = False
+        mocked_open = mocker.patch("builtins.open")
+
+        utils["terminal"].process("cat textfile.txt")
+
+        path.assert_called()
+        utils["isdir"].assert_called_once()
+        mocked_open.assert_called()
+
+    def test_cat_missing_path(self, path: Mock, utils: dict[str, Mock]):
+        utils["terminal"].process("cat")
+
+        path.assert_not_called()
+        utils["isdir"].assert_not_called()
+
+
+class TestCp:
+
+    def test_cp_fakepath(self, fake_path: Mock, utils: dict[str, Mock]):
+        utils["terminal"].process("cp fakepath .")
+
+        fake_path.assert_called()
+        utils["isfile"].assert_not_called()
+        utils["isdir"].assert_not_called()
+
+    def test_cp_dir_without_r(
+        self, path: Mock, utils: dict[str, Mock], mocker: MockerFixture
+    ):
+        utils["isdir"].return_value = True
+
+        utils["terminal"].process("cp dirpath .")
+
+        path.assert_called()
+        utils["isfile"].assert_not_called()
+        utils["isdir"].assert_called_once()
+        utils["copy"].assert_not_called()
+        utils["copytree"].assert_not_called()
+
+    def test_cp_dir_with_r(self, path: Mock, utils: dict[str, Mock]):
+        utils["isfile"].return_value = False
+        utils["copytree"].return_value = "dstpath"
+
+        utils["terminal"].process("cp dirpath . -r")
+
+        path.assert_called()
+        utils["isfile"].assert_called_once()
+        utils["isdir"].assert_not_called()
+        utils["copy"].assert_not_called()
+        utils["copytree"].assert_called_once()
+
+    def test_cp_file_without_r(self, path: Mock, utils: dict[str, Mock]):
+        utils["isdir"].return_value = False
+        utils["copy"].return_value = "dstpath"
+
+        utils["terminal"].process("cp filepath .")
+
+        path.assert_called()
+        utils["isfile"].assert_not_called()
+        utils["isdir"].assert_called_once()
+        utils["copy"].assert_called_once()
+        utils["copytree"].assert_not_called()
+
+    def test_cp_file_with_r(self, path: Mock, utils: dict[str, Mock]):
+        utils["isfile"].return_value = True
+
+        utils["terminal"].process("cp filepath . --recursive")
+
+        path.assert_called()
+        utils["isfile"].assert_called_once()
+        utils["isdir"].assert_not_called()
+        utils["copy"].assert_not_called()
+        utils["copytree"].assert_not_called()
+
+    def test_cat_missing_args(self, path: Mock, utils: dict[str, Mock]):
+        utils["terminal"].process("cp srcpathonly")
+
+        path.assert_not_called()
+        utils["isfile"].assert_not_called()
+        utils["isdir"].assert_not_called()
+
+
+class TestMv:
+
+    def test_mv_fakepath(self, fake_path: Mock, utils: dict[str, Mock]):
+        utils["terminal"].process("mv fakepath .")
+
+        fake_path.assert_called()
+        utils["move"].assert_not_called()
+        utils["isdir"].assert_not_called()
+        utils["copytree"].assert_not_called()
+        utils["remove"].assert_not_called()
+
+    def test_mv_samepath(self, path: Mock, utils: dict[str, Mock]):
+        utils["terminal"].process("mv srcpath srcpath")
+
+        path.assert_called()
+        utils["move"].assert_called_once()
+        utils["isdir"].assert_not_called()
+        utils["copytree"].assert_not_called()
+        utils["remove"].assert_not_called()
+
+    def test_mv_dst_already_exist(self, path: Mock, utils: dict[str, Mock]):
+        utils["move"].side_effect = PathAlreadyExistsError
+        utils["isdir"].return_value = True
+
+        utils["terminal"].process("mv srcpath dirpath")
+
+        path.assert_called()
+        utils["move"].assert_called_once()
+        utils["isdir"].assert_called_once()
+        utils["copy"].assert_not_called()
+        utils["copytree"].assert_called_once()
+        utils["remove"].assert_not_called()
+        utils["rmtree"].assert_called_once()
+
+    def test_mv_missing_args(self, path: Mock, utils: dict[str, Mock]):
+        utils["terminal"].process("mv srcpathonly")
+
+        path.assert_not_called()
+        utils["move"].assert_not_called()
+        utils["isdir"].assert_not_called()
+        utils["copytree"].assert_not_called()
+        utils["remove"].assert_not_called()
+
+
+class TestRm:
+
+    def test_rm_fakepath(self, fake_path: Mock, utils: dict[str, Mock]):
+        utils["terminal"].process("rm fakepath")
+
+        fake_path.assert_called()
+        utils["move"].assert_not_called()
+        utils["isfile"].assert_not_called()
+        utils["isdir"].assert_not_called()
+        utils["move"].assert_not_called()
+        utils["remove"].assert_not_called()
+        utils["rmtree"].assert_not_called()
+
+    def test_rm_dirpath_without_r(self, path: Mock, utils: dict[str, Mock]):
+        utils["isdir"].return_value = True
+
+        utils["terminal"].process("rm dirpath")
+
+        path.assert_called()
+        utils["isfile"].assert_not_called()
+        utils["isdir"].assert_called_once()
+        utils["move"].assert_not_called()
+        utils["remove"].assert_not_called()
+        utils["rmtree"].assert_not_called()
+
+    def test_rm_dirpath_with_r(
+        self, path: Mock, utils: dict[str, Mock], mocker: MockerFixture
+    ):
+        utils["isfile"].return_value = False
+        utils["copytree"].return_value = "dstpath"
+        utils["rmtree"].return_value = None
+        mocked_confirmation = mocker.patch.object(
+            utils["terminal"].commands["rm"], "get_confirmation"
+        )
+        mocked_confirmation.return_value = True
+
+        utils["terminal"].process("rm dirpath -r")
+
+        path.assert_called()
+        utils["isfile"].assert_called_once()
+        utils["isdir"].assert_not_called()
+        utils["move"].assert_called_once()
+        utils["rmtree"].assert_not_called()
+
+    def test_rm_filepath_without_r(self, path: Mock, utils: dict[str, Mock]):
+        utils["isdir"].return_value = False
+
+        utils["terminal"].process("rm filepath")
+
+        path.assert_called()
+        utils["isfile"].assert_not_called()
+        utils["isdir"].assert_called_once()
+        utils["move"].assert_called_once()
+        utils["remove"].assert_not_called()
+
+    def test_rm_filepath_with_r(self, path: Mock, utils: dict[str, Mock]):
+        utils["isfile"].return_value = True
+
+        utils["terminal"].process("rm filepath --recursive")
+
+        path.assert_called()
+        utils["isfile"].assert_called_once()
+        utils["isdir"].assert_not_called()
+        utils["move"].assert_not_called()
+        utils["remove"].assert_not_called()
+        utils["rmtree"].assert_not_called()
+
+    def test_rm_dirpath_already_exists_error(
+        self, path: Mock, utils: dict[str, Mock], mocker: MockerFixture
+    ):
+        utils["move"].side_effect = [PathAlreadyExistsError, None]
+        utils["isfile"].return_value = False
+        mocked_confirmation = mocker.patch.object(
+            utils["terminal"].commands["rm"], "get_confirmation"
+        )
+        mocked_confirmation.return_value = True
+
+        utils["terminal"].process("rm dirpath -r")
+
+        path.assert_called()
+        utils["isfile"].assert_called_once()
+        utils["isdir"].assert_not_called()
+        utils["move"].assert_called()
+        utils["remove"].assert_not_called()
+        utils["rmtree"].assert_called_once()
+
+    def test_rm_filepath_already_exists_error(self, path: Mock, utils: dict[str, Mock]):
+        utils["move"].side_effect = [PathAlreadyExistsError, None]
+        utils["isdir"].return_value = False
+
+        utils["terminal"].process("rm filepath")
+
+        path.assert_called()
+        utils["isfile"].assert_not_called()
+        utils["isdir"].assert_called_once()
+        utils["move"].assert_called()
+        utils["remove"].assert_called_once()
+        utils["rmtree"].assert_not_called()
+
+    def test_rm_missing_arg(self, path: Mock, utils: dict[str, Mock]):
+        utils["terminal"].process("rm")
+
+        path.assert_not_called()
+        utils["isfile"].assert_not_called()
+        utils["isdir"].assert_not_called()
+        utils["move"].assert_not_called()
+        utils["rmtree"].assert_not_called()
+        utils["remove"].assert_not_called()
+
+
+class TestZip:
+
+    def test_zip_fakepath(
+        self, fake_path: Mock, utils: dict[str, Mock], mocker: MockerFixture
+    ):
+        mocked_zipfile = mocker.patch("src.commands.zip.ZipFile")
+
+        utils["terminal"].process("zip fakepath")
+
+        fake_path.assert_called()
+        utils["isfile"].assert_not_called()
+        mocked_zipfile.assert_not_called()
+
+    def test_zip_dirpath(
+        self, path: Mock, utils: dict[str, Mock], mocker: MockerFixture
+    ):
+        mocked_zipfile = mocker.patch("src.commands.zip.ZipFile")
+        utils["isfile"].return_value = False
+
+        utils["terminal"].process("zip dirpath arcname")
+
+        path.assert_called()
+        utils["isfile"].assert_called_once()
+        mocked_zipfile.assert_called_once()
+
+    def test_zip_filepath(
+        self, path: Mock, utils: dict[str, Mock], mocker: MockerFixture
+    ):
+        mocked_zipfile = mocker.patch("src.commands.zip.ZipFile")
+        utils["isfile"].return_value = True
+
+        utils["terminal"].process("zip filepath arcname")
+
+        path.assert_called()
+        utils["isfile"].assert_called_once()
+        mocked_zipfile.assert_not_called()
+
+    def test_zip_missing_arg(
+        self, path: Mock, utils: dict[str, Mock], mocker: MockerFixture
+    ):
+        mocked_zipfile = mocker.patch("src.commands.zip.ZipFile")
+
+        utils["terminal"].process("zip")
+
+        path.assert_not_called()
+        utils["isfile"].assert_not_called()
+        mocked_zipfile.assert_not_called()
+
+
+class TestTar:
+
+    def test_tar_fakepath(
+        self, fake_path: Mock, utils: dict[str, Mock], mocker: MockerFixture
+    ):
+        mocked_tarfile = mocker.patch("src.commands.tar.TarFile")
+
+        utils["terminal"].process("tar fakepath")
+
+        fake_path.assert_called()
+        utils["isfile"].assert_not_called()
+        mocked_tarfile.assert_not_called()
+
+    def test_tar_dirpath(
+        self, path: Mock, utils: dict[str, Mock], mocker: MockerFixture
+    ):
+        mocked_tarfile = mocker.patch("src.commands.tar.TarFile")
+        utils["isfile"].return_value = False
+
+        utils["terminal"].process("tar dirpath arcname")
+
+        path.assert_called()
+        utils["isfile"].assert_called_once()
+        mocked_tarfile.assert_called_once()
+
+    def test_tar_filepath(
+        self, path: Mock, utils: dict[str, Mock], mocker: MockerFixture
+    ):
+        mocked_tarfile = mocker.patch("src.commands.tar.TarFile")
+        utils["isfile"].return_value = True
+
+        utils["terminal"].process("tar filepath arcname")
+
+        path.assert_called()
+        utils["isfile"].assert_called_once()
+        mocked_tarfile.assert_not_called()
+
+    def test_tar_missing_arg(
+        self, path: Mock, utils: dict[str, Mock], mocker: MockerFixture
+    ):
+        mocked_tarfile = mocker.patch("src.commands.tar.TarFile")
+
+        utils["terminal"].process("tar")
+
+        path.assert_not_called()
+        utils["isfile"].assert_not_called()
+        mocked_tarfile.assert_not_called()
+
+
+class TestUnzip:
+
+    def test_unzip_fakepath(
+        self, fake_path: Mock, utils: dict[str, Mock], mocker: MockerFixture
+    ):
+        mocked_iszipfile = mocker.patch("src.commands.unzip.is_zipfile")
+        mocked_zipfile = mocker.patch("src.commands.unzip.ZipFile")
+
+        utils["terminal"].process("unzip fakepath")
+
+        fake_path.assert_called()
+        mocked_iszipfile.assert_not_called()
+        mocked_zipfile.assert_not_called()
+
+    def test_unzip_not_zipfile(
+        self, path: Mock, utils: dict[str, Mock], mocker: MockerFixture
+    ):
+        mocked_iszipfile = mocker.patch("src.commands.unzip.is_zipfile")
+        mocked_iszipfile.return_value = False
+        mocked_zipfile = mocker.patch("src.commands.unzip.ZipFile")
+
+        utils["terminal"].process("unzip notzipfile")
+
+        path.assert_called()
+        mocked_iszipfile.assert_called_once()
+        mocked_zipfile.assert_not_called()
+
+    def test_unzip_success(
+        self, path: Mock, utils: dict[str, Mock], mocker: MockerFixture
+    ):
+        mocked_iszipfile = mocker.patch("src.commands.unzip.is_zipfile")
+        mocked_iszipfile.return_value = True
+        mocked_zipfile = mocker.patch("src.commands.unzip.ZipFile")
+
+        utils["terminal"].process("unzip zipfile")
+
+        path.assert_called()
+        mocked_iszipfile.assert_called_once()
+        mocked_zipfile.assert_called_once()
+
+    def test_unzip_missing_arg(
+        self, path: Mock, utils: dict[str, Mock], mocker: MockerFixture
+    ):
+        mocked_iszipfile = mocker.patch("src.commands.unzip.is_zipfile")
+        mocked_zipfile = mocker.patch("src.commands.unzip.ZipFile")
+
+        utils["terminal"].process("unzip")
+
+        path.assert_not_called()
+        mocked_iszipfile.assert_not_called()
+        mocked_zipfile.assert_not_called()
+
+
+class TestUntar:
+
+    def test_untar_fakepath(
+        self, fake_path: Mock, utils: dict[str, Mock], mocker: MockerFixture
+    ):
+        mocked_istarfile = mocker.patch("src.commands.untar.is_tarfile")
+        mocked_tarfile = mocker.patch("src.commands.untar.TarFile")
+
+        utils["terminal"].process("untar fakepath")
+
+        fake_path.assert_called()
+        mocked_istarfile.assert_not_called()
+        mocked_tarfile.assert_not_called()
+
+    def test_untar_not_zipfile(
+        self, path: Mock, utils: dict[str, Mock], mocker: MockerFixture
+    ):
+        mocked_istarfile = mocker.patch("src.commands.untar.is_tarfile")
+        mocked_istarfile.return_value = False
+        mocked_tarfile = mocker.patch("src.commands.untar.TarFile")
+
+        utils["terminal"].process("untar nottarfile")
+
+        path.assert_called()
+        mocked_istarfile.assert_called_once()
+        mocked_tarfile.assert_not_called()
+
+    def test_untar_success(
+        self, path: Mock, utils: dict[str, Mock], mocker: MockerFixture
+    ):
+        mocked_istarfile = mocker.patch("src.commands.untar.is_tarfile")
+        mocked_istarfile.return_value = True
+        mocked_tarfile = mocker.patch("src.commands.untar.TarFile")
+
+        utils["terminal"].process("untar tarfile")
+
+        path.assert_called()
+        mocked_istarfile.assert_called_once()
+        mocked_tarfile.assert_called_once()
+
+    def test_untar_missing_arg(
+        self, path: Mock, utils: dict[str, Mock], mocker: MockerFixture
+    ):
+        mocked_istarfile = mocker.patch("src.commands.untar.is_tarfile")
+        mocked_tarfile = mocker.patch("src.commands.untar.TarFile")
+
+        utils["terminal"].process("untar")
+
+        path.assert_not_called()
+        mocked_istarfile.assert_not_called()
+        mocked_tarfile.assert_not_called()
+
+
+class TestGrep:
+
+    def test_grep_fakepath(self, fake_path: Mock, utils: dict[str, Mock]):
+        utils["terminal"].process("grep pattern fakepath")
+
+        fake_path.assert_called()
+        utils["isfile"].assert_not_called()
+        utils["listdir"].assert_not_called()
+        utils["walk"].assert_not_called()
+
+    def test_grep_filepath_without_r(
+        self, path: Mock, utils: dict[str, Mock], mocker: MockerFixture
+    ):
+        utils["isfile"].return_value = True
+        mocked_search = mocker.patch.object(
+            utils["terminal"].commands["grep"], "search_pattern"
         )
 
-    # mv
-    def test_mv_1(self):
-        terminal.process(
-            "mv subfolder_for_tests/somefile1.txt subfolder_for_tests\\somefile2.txt"
-        )
-        assert access(
-            path=f"{TESTS_DIR}/subfolder_for_tests/somefile2.txt",
-            mode=F_OK,
-        ) and not access(
-            path=f"{TESTS_DIR}\\subfolder_for_tests\\somefile1.txt", mode=F_OK
-        )
+        utils["terminal"].process("grep pattern filepath")
 
-    def test_mv_2(self, capsys):
-        terminal.process("mv subfolder_for_tests .")
+        path.assert_called()
+        utils["isfile"].assert_called_once()
+        mocked_search.assert_called_once()
+        utils["listdir"].assert_not_called()
+        utils["walk"].assert_not_called()
 
-        captured = capsys.readouterr()
-        expected = f"\033[0;31m😕 Source and destination are equal:\033[0m \033[1;31m{TESTS_DIR}\\subfolder_for_tests\033[0m\n"
-        assert captured.out == expected
-
-    def test_mv_3(self):
-        terminal.process("mv subfolder_for_tests/somefile3.txt .")
-        assert access(path=f"{TESTS_DIR}/somefile3.txt", mode=F_OK) and not access(
-            path=f"{TESTS_DIR}/subfolder_for_tests/somefile3.txt", mode=F_OK
+    def test_grep_filepath_with_r(
+        self, path: Mock, utils: dict[str, Mock], mocker: MockerFixture
+    ):
+        utils["isfile"].return_value = True
+        mocked_search = mocker.patch.object(
+            utils["terminal"].commands["grep"], "search_pattern"
         )
 
-    def test_mv_4(self):
-        terminal.process("mv somefile3.txt subfolder_for_tests/.")
-        assert not access(path=f"{TESTS_DIR}/somefile3.txt", mode=F_OK) and access(
-            path=f"{TESTS_DIR}/subfolder_for_tests/somefile3.txt", mode=F_OK
-        )
+        utils["terminal"].process("grep pattern filepath -r")
 
-    # rm
-    def test_rm_1(self):
-        terminal.process("rm subfolder_for_tests/somefile2.txt")
-        assert not access(
-            path=f"{TESTS_DIR}/subfolder_for_tests/somefile2.txt", mode=F_OK
-        ) and access(path=f"{Path().cwd()}/.trash/somefile2.txt", mode=F_OK)
+        path.assert_called()
+        utils["isfile"].assert_called_once()
+        mocked_search.assert_not_called()
+        utils["listdir"].assert_not_called()
+        utils["walk"].assert_not_called()
 
-    def test_rm_2(self, capsys):
-        terminal.process("rm ../subfolder_for_tests")
+    def test_grep_dirpath_without_r(self, path: Mock, utils: dict[str, Mock]):
+        utils["isfile"].return_value = False
 
-        captured = capsys.readouterr()
-        expected = f"\033[0;31m😕 Directory path received instead of file path:\033[0m \033[1;31m{Path().cwd()}\\tests\\subfolder_for_tests\033[0m\n"
-        assert captured.out == expected
+        utils["terminal"].process("grep pattern dirpath")
 
-    def test_rm_3(self):
-        terminal.process("rm -r ..\\subfolder_for_tests")
-        assert not access(
-            path=f"{TESTS_DIR}\\..\\subfolder_for_tests", mode=F_OK
-        ) and access(path=f"{Path().cwd()}\\.trash\\subfolder_for_tests", mode=F_OK)
+        path.assert_called()
+        utils["isfile"].assert_called_once()
+        utils["listdir"].assert_called_once()
+        utils["walk"].assert_not_called()
 
-    def test_rm_4(self, capsys):
-        terminal.process("rm ..\\.. --recursive")
+    def test_grep_dirpath_with_r(self, path: Mock, utils: dict[str, Mock]):
+        utils["isfile"].return_value = False
 
-        captured = capsys.readouterr()
-        expected = f"\033[0;31m😡 Attempt to remove parent path:\033[0m \033[1;31m{Path().cwd()}\033[0m\n"
-        assert captured.out == expected
+        utils["terminal"].process("grep pattern dirpath -r")
 
-    # zip
-    def test_zip_1(self):
-        terminal.process("zip subfolder_for_tests ziptest")
-        assert access(path=f"{TESTS_DIR}\\ziptest.zip", mode=F_OK)
+        path.assert_called()
+        utils["isfile"].assert_called_once()
+        utils["listdir"].assert_not_called()
+        utils["walk"].assert_called_once()
 
-    def test_zip_2(self, capsys):
-        terminal.process("zip somefile1.txt file.zip")
+    def test_grep_missing_args(self, path: Mock, utils: dict[str, Mock]):
+        utils["terminal"].process("grep onlypattern")
 
-        captured = capsys.readouterr()
-        expected = f"\033[0;31m😕 File path received instead of directory path:\033[0m \033[1;31m{TESTS_DIR}\\somefile1.txt\033[0m\n"
-        assert captured.out == expected
+        path.assert_not_called()
+        utils["isfile"].assert_not_called()
+        utils["listdir"].assert_not_called()
+        utils["walk"].assert_not_called()
 
-    # unzip
-    def test_unzip_1(self):
-        terminal.process("unzip ziptest.zip")
-        assert access(path=f"{Path().cwd()}\\subfolder_for_tests", mode=F_OK)
 
-        terminal.process("rm ziptest.zip")
-        terminal.process("rm ../../subfolder_for_tests -r")
+class TestHistory:
 
-    # tar
-    def test_tar_1(self):
-        terminal.process("tar subfolder_for_tests tartest")
-        assert access(path=f"{TESTS_DIR}\\tartest.tar", mode=F_OK)
+    def test_history_not_exists(
+        self, fake_path: Mock, utils: dict[str, Mock], mocker: MockerFixture
+    ):
+        mocked_open = mocker.patch("builtins.open")
 
-    def test_tar_2(self, capsys):
-        terminal.process("tar somefile2.txt file.tar")
+        utils["terminal"].process("history")
 
-        captured = capsys.readouterr()
-        expected = f"\033[0;31m😕 File path received instead of directory path:\033[0m \033[1;31m{TESTS_DIR}\\somefile2.txt\033[0m\n"
-        assert captured.out == expected
+        fake_path.assert_called()
+        mocked_open.assert_not_called()
 
-    # untar
-    def test_untar_1(self):
-        terminal.process("untar tartest")
-        assert access(path=f"{Path().cwd()}\\subfolder_for_tests", mode=F_OK)
+    def test_history_success(
+        self, path: Mock, utils: dict[str, Mock], mocker: MockerFixture
+    ):
+        mocked_open = mocker.patch("builtins.open")
 
-        terminal.process("rm tartest.tar")
-        terminal.process('rm ../../subfolder_for_tests -r')
+        utils["terminal"].process("history --count 20")
 
-    # grep
-    def test_grep_1(self, capsys):
-        terminal.process("grep soMEfILe2 . -r -i")
+        path.assert_called()
+        mocked_open.assert_called()
 
-        captured = capsys.readouterr()
-        expected = f'\033[0;34mFile: {TESTS_DIR}\\somefile2.txt\033[0m \033[0m\nLine 1: "somefile2" at position 10\n'
-        assert captured.out == expected
 
-    def test_grep_2(self, capsys):
-        terminal.process("grep rom . --recursive")
+class TestUndo:
 
-        captured = capsys.readouterr()
-        expected = f'\033[0;34mFile: {TESTS_DIR}\\somefile1.txt\033[0m \033[0m\nLine 1: "rom" at position 6\n\033[0;34mFile: {TESTS_DIR}\\somefile2.txt\033[0m \033[0m\nLine 1: "rom" at position 6\n\033[0;34mFile: {TESTS_DIR}\\subfolder_for_tests\\somefile3.txt\033[0m \033[0m\nLine 1: "rom" at position 6\n'
-        assert captured.out == expected
+    def test_undo_history_not_exists(self, fake_path: Mock, utils: dict[str, Mock], mocker: MockerFixture):
+        mocked_open = mocker.patch('builtins.open')
 
-    def test_grep_3(self, capsys):
-        terminal.process("grep somefile1 subfolder_for_tests\\somefile3.txt")
+        utils['terminal'].process('undo')
 
-        captured = capsys.readouterr()
-        expected = ""
-        assert captured.out == expected
+        fake_path.assert_called()
+        mocked_open.assert_not_called()
+
+    def test_undo_not_found_commands(self, path: Mock, utils: dict[str, Mock], mocker: MockerFixture):
+        mocked_open = mocker.patch('builtins.open')
+        mocked_open.readlines.return_value = ['New session ...']
+        mocked_message = mocker.patch('src.errors.command_to_undo_not_found_message')
+
+        utils['terminal'].process('undo')
+
+        path.assert_called()
+        mocked_message.assert_called_once()

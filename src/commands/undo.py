@@ -1,10 +1,8 @@
-from os import access, F_OK
 from argparse import ArgumentParser
-
 from src.commands.mv import cmd_mv
 from src.commands.rm import cmd_rm
 from src.commands.history import cmd_history
-from src.errors import history_file_not_found_message, command_to_undo_not_found_message
+from src.errors import history_file_not_found_message
 
 
 class Undo:
@@ -25,24 +23,26 @@ class Undo:
             cwd (str): directory to execute from
             _args (list[str]): args for 'undo' command
         """
-        if not access(path="./.history", mode=F_OK):
+        from src import Path
+        from src.errors import command_to_undo_not_found_message
+
+        if not Path("./.history").exists():
             history_file_not_found_message()
             return
 
-        #  Check is history was initiated in current session
+        # Check is history was initiated in current session
         if not cmd_history.initiated:
             command_to_undo_not_found_message()
             return
 
-        #  Search command to undo from end to begin
+        # Search command to undo from end to begin
         commands = open("./.history").readlines()[::-1]
         line = len(commands) - 1
 
         for cmd in commands:
-            #  Check is commands in current session ended up
+            # Check is commands in current session ended up
             if cmd.startswith("New session"):
-                command_to_undo_not_found_message()
-                return
+                break
 
             _, command, *args = cmd.split()
 
@@ -69,14 +69,14 @@ class Undo:
                 case "rm":
                     _args = []
                     if args[-1] == "--recursive":
-                        #  Getting start index of filename in path
+                        # Getting start index of filename in path
                         ind = args[-2].rfind("\\") + 1
                         _args = [
                             f"./.trash/{args[-2][ind:]}",
                             args[-2][:ind],
                         ]
                     else:
-                        #  Getting correct name of file in .trash
+                        # Getting correct name of file in .trash
                         ind = args[-1].rfind("\\") + 1
                         _args = [
                             f"./.trash/{args[-1][ind:]}",

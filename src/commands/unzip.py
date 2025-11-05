@@ -1,9 +1,5 @@
-from os import access, F_OK
-from os.path import isabs
-from pathlib import Path
 from zipfile import ZipFile, is_zipfile
 from argparse import ArgumentParser, ArgumentError
-
 from src.commands.history import cmd_history
 from src.errors import (
     path_doesnt_exist_message,
@@ -30,6 +26,8 @@ class Unzip:
             cwd (str): directory to execute from
             _args (list[str]): args for 'unzip' command
         """
+        from src import isabs, Path
+
         try:
             args, unknown_args = self.parser.parse_known_args(args=_args)
         except ArgumentError as e:
@@ -41,21 +39,19 @@ class Unzip:
             unknown_arguments_message(unknown_args=unknown_args)
 
         path = str(
-            Path(args.path if isabs(args.path) else f"{cwd}\{args.path}").resolve()
+            Path(args.path if isabs(args.path) else f"{cwd}/{args.path}").resolve()
         )
-
-        #  Create valid archive path
-        zippath = path if path.endswith(".zip") else f'{path}.zip'
-
-        if not access(path=zippath, mode=F_OK):
-            path_doesnt_exist_message(path=zippath)
+        if not path.endswith(".zip"):
+            path += ".zip"
+        if not Path(path).exists():
+            path_doesnt_exist_message(path=path)
             return
 
-        if not is_zipfile(filename=zippath):
-            path_doesnt_lead_to_zipfile_message(path=zippath)
+        if not is_zipfile(filename=path):
+            path_doesnt_lead_to_zipfile_message(path=path)
             return
 
-        with ZipFile(file=zippath, mode="r") as zipr:
+        with ZipFile(file=path, mode="r") as zipr:
             zipr.extractall()
         cmd_history.write(cmd=f"unzip {path}")
 

@@ -1,9 +1,5 @@
-from os import access, F_OK, mkdir, remove
-from os.path import isabs, isdir, isfile
-from pathlib import Path
-from shutil import move, rmtree, Error
+from shutil import Error as PathAlreadyExistsError
 from argparse import ArgumentParser, ArgumentError
-
 from src.commands.history import cmd_history
 from src.logger import logger
 from src.errors import (
@@ -40,6 +36,8 @@ class Rm:
             cwd (str): directory to execute from
             _args (list[str]): args for 'rm' command
         """
+        from src import mkdir, remove, isabs, isdir, isfile, Path, move, rmtree
+
         try:
             args, unknown_args = self.parser.parse_known_args(args=_args)
         except ArgumentError as e:
@@ -51,19 +49,19 @@ class Rm:
             unknown_arguments_message(unknown_args=unknown_args)
 
         path = str(
-            Path(args.path if isabs(args.path) else f"{cwd}\{args.path}").resolve()
+            Path(args.path if isabs(args.path) else f"{cwd}/{args.path}").resolve()
         )
-        if not access(path=path, mode=F_OK):
+        if not Path(path).exists():
             path_doesnt_exist_message(path=path)
             return
 
-        #  Decline command if it tries to delete root or parent directory
+        # Decline command if it tries to delete root or parent directory
         if cwd and str(path) in cwd:
             attempt_to_remove_parent_path_message(path=path)
             return
 
-        #  Create .trash if it didn't exists
-        if not access(path="./.trash", mode=F_OK):
+        # Create .trash if it didn't exists
+        if not Path("./.trash").exists():
             mkdir("./.trash")
 
         if args.recursive:
@@ -71,16 +69,17 @@ class Rm:
                 path_leads_to_file_instead_of_dir_message(path=path)
                 return
 
-            #  Confirmation
+            # Confirmation
             if not self.get_confirmation(path=path):
                 logger.info("Action cancelled")
                 return
 
             try:
                 move(src=path, dst="./.trash")
-            except Error:
-                #  Replace old file in .trash with new by deleting previous
-                rmtree(f'./.trash/{path.split('\\')[-1]}')
+            except PathAlreadyExistsError:
+                filename = path.split("\\")[-1]
+                # Replace old file in .trash with new by deleting previous
+                rmtree(f"./.trash/{filename}")
                 move(src=path, dst="./.trash")
             if cwd:
                 cmd_history.write(cmd=f"rm {path} --recursive")
@@ -91,9 +90,10 @@ class Rm:
 
             try:
                 move(src=path, dst="./.trash")
-            except Error:
-                #  Replace old file in .trash with new by deleting previous
-                remove(f'./.trash/{path.split('\\')[-1]}')
+            except PathAlreadyExistsError:
+                filename = path.split("\\")[-1]
+                # Replace old file in .trash with new by deleting previous
+                remove(f"./.trash/{filename}")
                 move(src=path, dst="./.trash")
             if cwd:
                 cmd_history.write(cmd=f"rm {path}")
@@ -115,7 +115,10 @@ class Rm:
 
 def clear_trash() -> None:
     "Delete .trash directory with all includes"
-    if access(path="./.trash", mode=F_OK):
+    # Imports
+    from src import Path, rmtree
+
+    if Path("./.trash").exists():
         rmtree("./.trash")
 
 
