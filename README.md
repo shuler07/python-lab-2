@@ -24,6 +24,17 @@
 - Временный каталог .trash для удалённых файлов и папок, который очищается после выхода из терминала
 - Файл .history с данными о последних сеансах и выполненных командах
 
+## Структура проекта
+src/commands/ - реализация консольных команд для терминала  
+src/ - вспомогательные утилиты для терминала (цветной текст, логирование, сообщения об ошибках, константы), терминал и точка входа main.py  
+tests/test_terminal.py - тесты для проверки работоспособности терминала  
+.pre-commit-config.yaml  
+.gitignore  
+README.md  
+pyproject.toml  
+requirements.txt  
+uv.lock  
+
 ## Как использовать
 1. Запустите терминал (python -m src.main)
 2. Наслаждайтесь!
@@ -53,6 +64,17 @@ Also:
 - Logging in t3000.log
 - Temporary .trash directory for removed files and folders, that clears after quitting terminal
 - .history file with data about last sessions and executed commands
+
+## Project Structure
+src/commands/ - implementation of console commands for the terminal  
+src/ - auxiliary utilities for the terminal (colored text, logging, error messages, constants), terminal, and main.py entry point  
+tests/test_terminal.py - tests for checking the terminal's functionality  
+.pre-commit-config.yaml  
+.gitignore  
+README.md  
+pyproject.toml  
+requirements.txt  
+uv.lock  
 
 ## How to use
 1. Launch terminal (python -m src.main)
