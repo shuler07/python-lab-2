@@ -25,15 +25,37 @@
 - Файл .history с данными о последних сеансах и выполненных командах
 
 ## Структура проекта
-src/commands/ - реализация консольных команд для терминала  
-src/ - вспомогательные утилиты для терминала (цветной текст, логирование, сообщения об ошибках, константы), терминал и точка входа main.py  
-tests/test_terminal.py - тесты для проверки работоспособности терминала  
-.pre-commit-config.yaml  
-.gitignore  
-README.md  
-pyproject.toml  
-requirements.txt  
-uv.lock  
+
+<pre>
+    .
+    ├── src/                               # Исходный код  
+    │   ├─── commands/                     # Исходный код команд терминала
+    │   │   ├─── ls.py                     # Класс команды ls
+    │   │   ├─── cd.py                     # Класс команды cd
+    │   │   ├─── cat.py                    # Класс команды cat
+    │   │   ├─── cp.py                     # Класс команды cp
+    │   │   ├─── mv.py                     # Класс команды mv
+    │   │   ├─── rm.py                     # Класс команды rm
+    │   │   ├─── zip.py                    # Класс команды zip
+    │   │   ├─── unzip.py                  # Класс команды unzip
+    │   │   ├─── tar.py                    # Класс команды tar
+    │   │   ├─── untar.py                  # Класс команды untar
+    │   │   ├─── grep.py                   # Класс команды grep
+    │   │   ├─── history.py                # Класс команды history
+    │   │   ├─── undo.py                   # Класс команды undo
+    │   ├── colortext.py                   # Функция colorize для цветного текста
+    │   ├── constants.py                   # Константы
+    │   ├── errors.py                      # Сообщения об ошибках и их логирование
+    │   ├── logger.py                      # Логгер
+    │   ├── main.py                        # Точка входа
+    │   ├── terminal.py                    # Класс терминала
+    ├── tests/                             # Тесты
+    │   ├── test_terminal.py               # Тест отработки терминала
+    ├── uv.lock                            # Зависимости проекта
+    ├── .gitignore                         # .gitignore файл
+    ├──.pre-commit-config.yaml             # Средства автоматизации проверки кодстайла
+    ├── README.md                          # Описание проекта, этот файл
+</pre>
 
 ## Как использовать
 1. Запустите терминал (python -m src.main)
@@ -66,15 +88,37 @@ Also:
 - .history file with data about last sessions and executed commands
 
 ## Project Structure
-src/commands/ - implementation of console commands for the terminal  
-src/ - auxiliary utilities for the terminal (colored text, logging, error messages, constants), terminal, and main.py entry point  
-tests/test_terminal.py - tests for checking the terminal's functionality  
-.pre-commit-config.yaml  
-.gitignore  
-README.md  
-pyproject.toml  
-requirements.txt  
-uv.lock  
+
+<pre>
+    .
+    ├── src/                               # Source code
+    │   ├─── commands/                     # Source code for terminal commands
+    │   │   ├─── ls.py                     # Ls command class
+    │   │   ├─── cd.py                     # Cd command class
+    │   │   ├─── cat.py                    # Cat command class
+    │   │   ├─── cp.py                     # Cp command class
+    │   │   ├─── mv.py                     # Mv command class
+    │   │   ├─── rm.py                     # Rm command class
+    │   │   ├─── zip.py                    # Zip command class
+    │   │   ├─── unzip.py                  # Unzip command class
+    │   │   ├─── tar.py                    # Tar command class
+    │   │   ├─── untar.py                  # Untar command class
+    │   │   ├─── grep.py                   # Grep command class
+    │   │   ├─── history.py                # History command class
+    │   │   ├─── undo.py                   # Undo command class
+    │   ├── colortext.py                   # Colorize function for colored text
+    │   ├── constants.py                   # Constants
+    │   ├── errors.py                      # Error messages and logging errors
+    │   ├── logger.py                      # Logger
+    │   ├── main.py                        # Entry point
+    │   ├── terminal.py                    # Terminal class
+    ├── tests/                             # Tests
+    │   ├── test_terminal.py               # Test of terminal work
+    ├── uv.lock                            # Project dependencies
+    ├── .gitignore                         # .gitignore file
+    ├──.pre-commit-config.yaml             # Codestyle verification automation tools
+    ├── README.md                          # Project description, this file
+</pre>
 
 ## How to use
 1. Launch terminal (python -m src.main)
